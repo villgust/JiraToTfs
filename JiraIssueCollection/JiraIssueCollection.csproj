@@ -64,10 +64,14 @@
     <Compile Include="Tests\When_enumerating_filtered_query_with_middle_skip.cs" />
     <Compile Include="Tests\When_enumerating_converted_query.cs" />
     <Compile Include="Tests\When_enumerating_filtered_query_with_final_skip.cs" />
+    <Compile Include="Tests\When_enumerating_query_with_chained_member.cs" />
     <Compile Include="Tests\When_enumerating_query_with_compound_filter.cs" />
+    <Compile Include="Tests\When_enumerating_query_with_contains_condition.cs" />
     <Compile Include="Tests\When_enumerating_query_with_double_filter.cs" />
     <Compile Include="Tests\When_enumerating_query_with_simple_filter.cs" />
+    <Compile Include="Tests\When_enumerating_query_with_unsupported_filter.cs" />
     <Compile Include="Tests\When_enumerating_query_with_skip.cs" />
+    <Compile Include="Tests\When_enumerating_query_with_unary_not.cs" />
     <Compile Include="Tests\When_enumerating_unfiltered_query.cs" />
   </ItemGroup>
   <ItemGroup>

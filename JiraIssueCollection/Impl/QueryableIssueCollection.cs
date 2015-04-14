@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -81,7 +82,7 @@ namespace TechTalk.JiraRestClient
             var subexpression = FindSubexpression(expression);
             var result = jiraQuery.EnumerateIssuesByQuery(
                 CreateJql(subexpression.Expression),
-                FindIndex(subexpression.Expression));
+                GetStart(subexpression.Expression));
 
             if (subexpression.Complete) return (TResult)result;
 
@@ -122,6 +123,18 @@ namespace TechTalk.JiraRestClient
 
         private string GetFormula(Expression predicate)
         {
+            if (predicate is ConstantExpression)
+                return ((ConstantExpression)predicate).Value.ToString();
+
+            if (predicate is UnaryExpression)
+            {
+                var unaryExpr = (UnaryExpression)predicate;
+                if (unaryExpr.NodeType == ExpressionType.Quote)
+                    return GetFormula(((LambdaExpression)unaryExpr.Operand).Body);
+                if (unaryExpr.NodeType != ExpressionType.Not) Error();
+                return string.Format("(NOT{0})", GetFormula(unaryExpr.Operand));
+            }
+
             if (predicate is BinaryExpression)
             {
                 var left = ((BinaryExpression)predicate).Left;
@@ -132,12 +145,50 @@ namespace TechTalk.JiraRestClient
             }
 
             if (predicate is MemberExpression)
-                return ((MemberExpression)predicate).Member.Name;
+            {
+                var chain = new Stack<string>(5);
+                var memberExpr = (MemberExpression)predicate;
+                while (memberExpr.Expression.NodeType == ExpressionType.MemberAccess)
+                {
+                    chain.Push(memberExpr.Member.Name);
+                    memberExpr = (MemberExpression)memberExpr.Expression;
+                }
+                chain.Push(memberExpr.Member.Name);
+                var name = string.Join(".", chain);
+                return LookupJqlName(name);
+            }
 
-            if (predicate is ConstantExpression)
-                return ((ConstantExpression)predicate).Value.ToString();
+            if (predicate is MethodCallExpression)
+            {
+                var callExpression = (MethodCallExpression)predicate;
+                if (callExpression.Method.ReflectedType != typeof(Enumerable)
+                    || callExpression.Method.Name != "Contains") Error();
+                var collectionExpr = (MemberExpression)callExpression.Arguments[0];
+                var value = collectionExpr.Expression == null ? (object)null
+                    : ((ConstantExpression)collectionExpr.Expression).Value;
+                var collection = collectionExpr.Member is FieldInfo
+                    ? ((FieldInfo)collectionExpr.Member).GetValue(value)
+                    : ((PropertyInfo)collectionExpr.Member).GetValue(value, null);
+                return string.Format("({0} IN ({1}))", GetFormula(callExpression.Arguments[1]),
+                    string.Join(",", ((IEnumerable)collection).OfType<object>()));
+            }
 
-            return "null";
+            Error();
+            return null;
+        }
+
+        private string LookupJqlName(string field)
+        {
+            switch (field)
+            {
+                case "id":
+                    return "id";
+                case "fields.assignee.name":
+                    return "assignee";
+            }
+
+            Error();
+            return null;
         }
 
         private string GetOperator(ExpressionType expressionType)
@@ -162,12 +213,15 @@ namespace TechTalk.JiraRestClient
                 case ExpressionType.Or:
                 case ExpressionType.OrElse:
                     return " OR ";
-                default:
-                    return null;
             }
+
+            Error();
+            return null;
         }
 
-        private int FindIndex(Expression expression)
+        private void Error() { throw new InvalidOperationException(); }
+
+        private int GetStart(Expression expression)
         {
             var callExpression = expression as MethodCallExpression;
             if (callExpression == null) return 0;
@@ -198,8 +252,14 @@ namespace TechTalk.JiraRestClient
                     if (callExpression.Method == skipMethod)
                         handled = callExpression;
                     else if (callExpression.Method == whereMethod)
-                        if (handled == null) handled = callExpression;
+                    {
+                        var isOkay = false; // could build query expression here
+                        try { GetFormula(callExpression.Arguments[1]); isOkay = true; }
+                        catch { handled = null; /* could not generate jql expression */ }
+                        if (isOkay && handled == null) handled = callExpression;
+                    }
                 }
+                else /* wrong type */ handled = null;
             }
 
             return new Subexpression
