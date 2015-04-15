@@ -48,6 +48,32 @@ namespace TechTalk.JiraRestClient
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() { return this.GetEnumerator(); }
     }
+    internal sealed class QueryEnumerator<TElement> : IEnumerable<TElement>
+    {
+        private readonly IQueryable<TElement> queryable;
+        public QueryEnumerator(IQueryable<TElement> queryable)
+        {
+            this.queryable = queryable;
+        }
+
+        public IEnumerator<TElement> GetEnumerator()
+        {
+            return queryable.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return queryable.GetEnumerator();
+        }
+    }
+
+    internal static class QueryEnumerator
+    {
+        public static IEnumerable<TElement> Create<TElement>(IQueryable<TElement> queryable)
+        {
+            return new QueryEnumerator<TElement>(queryable);
+        }
+    }
 
     internal sealed class QueryableIssueCollectionProvider<TIssueFields> : IQueryProvider where TIssueFields : IssueFields, new()
     {
@@ -66,10 +92,13 @@ namespace TechTalk.JiraRestClient
 
         public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
         {
-            if (!typeof(IQueryable<Issue<TIssueFields>>).IsAssignableFrom(expression.Type))
-                return Execute<IEnumerable<TElement>>(expression).AsQueryable();
+            var subexpression = FindSubexpression(expression);
+            var subquery = new QueryableIssueCollection<TIssueFields>(this, subexpression.Expression);
+            if (subexpression.Complete) return (IQueryable<TElement>)(object)subquery;
 
-            return (IQueryable<TElement>)(object)(new QueryableIssueCollection<TIssueFields>(this, expression));
+            var baseQuery = QueryEnumerator.Create(subquery).AsQueryable();
+            var topExpression = SplitExpression(expression, subexpression.Expression, baseQuery);
+            return baseQuery.Provider.CreateQuery<TElement>(topExpression);
         }
 
         public IQueryable CreateQuery(Expression expression)
