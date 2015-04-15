@@ -21,7 +21,7 @@ namespace JiraRestClient.QueryableTests
 
         public Because of = () => ActionResult = Subject.ToArray();
 
-        public It should_execute_negated_query = () => JiraQueryMock.Verify(m => m.EnumerateIssuesByQuery("(NOT(id=id4))", 0), Moq.Times.Once);
+        public It should_execute_negated_query = () => JiraQueryMock.Verify(m => m.EnumerateIssuesByQuery("(NOT(id=\"id4\"))", 0), Moq.Times.Once);
 
         public It should_return_service_result = () => ActionResult.ShouldEqualTo(JiraQueryResult);
 

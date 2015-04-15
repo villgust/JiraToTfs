@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -48,6 +49,7 @@ namespace TechTalk.JiraRestClient
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() { return this.GetEnumerator(); }
     }
+    
     internal sealed class QueryEnumerator<TElement> : IEnumerable<TElement>
     {
         private readonly IQueryable<TElement> queryable;
@@ -78,6 +80,7 @@ namespace TechTalk.JiraRestClient
     internal sealed class QueryableIssueCollectionProvider<TIssueFields> : IQueryProvider where TIssueFields : IssueFields, new()
     {
         private readonly Type resultType = typeof(IEnumerable<Issue<TIssueFields>>);
+        private readonly Type[] quotedTypes = new[] { typeof(String), typeof(DateTime) };
         private readonly MethodInfo whereMethod = typeof(System.Linq.Queryable).GetMethods()
             .Where(m => m.Name == "Where").Single(m => IsPredicate(m))
             .MakeGenericMethod(typeof(Issue<TIssueFields>));
@@ -153,7 +156,12 @@ namespace TechTalk.JiraRestClient
         private string GetFormula(Expression predicate)
         {
             if (predicate is ConstantExpression)
-                return ((ConstantExpression)predicate).Value.ToString();
+            {
+                var constExpr = (ConstantExpression)predicate;
+                if (constExpr.Value == null) return "empty";
+                var format = quotedTypes.Contains(constExpr.Value.GetType()) ? "\"{0}\"" : "{0}";
+                return string.Format(CultureInfo.InvariantCulture, format, constExpr.Value);
+            }
 
             if (predicate is UnaryExpression)
             {
@@ -190,16 +198,15 @@ namespace TechTalk.JiraRestClient
             if (predicate is MethodCallExpression)
             {
                 var callExpression = (MethodCallExpression)predicate;
-                if (callExpression.Method.ReflectedType != typeof(Enumerable)
-                    || callExpression.Method.Name != "Contains") Error();
+                if (callExpression.Method.Name != "Contains") Error();
                 var collectionExpr = (MemberExpression)callExpression.Arguments[0];
                 var value = collectionExpr.Expression == null ? (object)null
                     : ((ConstantExpression)collectionExpr.Expression).Value;
-                var collection = collectionExpr.Member is FieldInfo
-                    ? ((FieldInfo)collectionExpr.Member).GetValue(value)
-                    : ((PropertyInfo)collectionExpr.Member).GetValue(value, null);
+                var collection = ((FieldInfo)collectionExpr.Member).GetValue(value);
+                var format = quotedTypes.Contains(callExpression.Arguments[1].Type) ? "\"{0}\"" : "{0}";
+                var stringify = new Func<object, string>(v => string.Format(CultureInfo.InvariantCulture, format, v));
                 return string.Format("({0} IN ({1}))", GetFormula(callExpression.Arguments[1]),
-                    string.Join(",", ((IEnumerable)collection).OfType<object>()));
+                    string.Join(",", ((IEnumerable)collection).OfType<object>().Select(stringify)));
             }
 
             Error();
@@ -212,6 +219,7 @@ namespace TechTalk.JiraRestClient
             {
                 case "id":
                     return "id";
+                case "fields.assignee":
                 case "fields.assignee.name":
                     return "assignee";
             }
@@ -282,7 +290,7 @@ namespace TechTalk.JiraRestClient
                         handled = callExpression;
                     else if (callExpression.Method == whereMethod)
                     {
-                        var isOkay = false; // could build query expression here
+                        var isOkay = false; //NOTE: could build query expression here
                         try { GetFormula(callExpression.Arguments[1]); isOkay = true; }
                         catch { handled = null; /* could not generate jql expression */ }
                         if (isOkay && handled == null) handled = callExpression;
@@ -298,14 +306,14 @@ namespace TechTalk.JiraRestClient
             };
         }
 
-        private Expression SplitExpression(Expression mainExpression, Expression handledExpression, IQueryable<Issue<TIssueFields>> expressionRoot)
+        private Expression SplitExpression(Expression mainExpression, Expression subexpression, IQueryable<Issue<TIssueFields>> expressionRoot)
         {
-            if (mainExpression == handledExpression) return Expression.Constant(expressionRoot);
+            if (mainExpression == subexpression) return Expression.Constant(expressionRoot);
 
             var expression = (MethodCallExpression)mainExpression;
             var arguments = new Expression[expression.Arguments.Count];
             Array.Copy(expression.Arguments.ToArray(), arguments, arguments.Length);
-            arguments[0] = SplitExpression(expression.Arguments[0], handledExpression, expressionRoot);
+            arguments[0] = SplitExpression(expression.Arguments[0], subexpression, expressionRoot);
             return Expression.Call(expression.Method, arguments);
         }
 

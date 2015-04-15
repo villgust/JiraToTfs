@@ -22,7 +22,7 @@ namespace JiraRestClient.QueryableTests
 
         public Because of = () => ActionResult = Subject.ToArray();
 
-        public It should_execute_partial_filter_with_skip = () => JiraQueryMock.Verify(m => m.EnumerateIssuesByQuery("(id!=id1)", 1), Moq.Times.Once);
+        public It should_execute_partial_filter_with_skip = () => JiraQueryMock.Verify(m => m.EnumerateIssuesByQuery("(id!=\"id1\")", 1), Moq.Times.Once);
 
         public It should_return_filtered_service_result = () => ActionResult.ShouldEqualTo(JiraQueryResult.Where(Filter2.Compile()));
 

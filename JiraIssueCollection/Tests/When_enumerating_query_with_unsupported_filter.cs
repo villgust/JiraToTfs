@@ -28,7 +28,7 @@ namespace JiraRestClient.QueryableTests
 
         public Because of = () => ActionResult = Subject.ToArray();
 
-        public It should_execute_supported_subquery = () => JiraQueryMock.Verify(m => m.EnumerateIssuesByQuery("(id!=id1)", 0), Moq.Times.Once);
+        public It should_execute_supported_subquery = () => JiraQueryMock.Verify(m => m.EnumerateIssuesByQuery("(id!=\"id1\")", 0), Moq.Times.Once);
 
         public It should_return_filtered_service_result = () => ActionResult.ShouldEqualTo(JiraQueryResult.Where(Filter2.Compile()).Where(Filter3.Compile()));
 

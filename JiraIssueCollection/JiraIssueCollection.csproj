@@ -68,6 +68,7 @@
     <Compile Include="Tests\When_enumerating_query_with_compound_filter.cs" />
     <Compile Include="Tests\When_enumerating_query_with_contains_condition.cs" />
     <Compile Include="Tests\When_enumerating_query_with_double_filter.cs" />
+    <Compile Include="Tests\When_enumerating_query_with_null_check.cs" />
     <Compile Include="Tests\When_enumerating_query_with_simple_filter.cs" />
     <Compile Include="Tests\When_enumerating_query_with_unsupported_filter.cs" />
     <Compile Include="Tests\When_enumerating_query_with_skip.cs" />

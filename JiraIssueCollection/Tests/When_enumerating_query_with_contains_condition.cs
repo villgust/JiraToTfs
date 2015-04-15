@@ -22,7 +22,7 @@ namespace JiraRestClient.QueryableTests
 
         public Because of = () => ActionResult = Subject.ToArray();
 
-        public It should_execute_collection_query = () => JiraQueryMock.Verify(m => m.EnumerateIssuesByQuery("(id IN (id2,id3))", 0), Moq.Times.Once);
+        public It should_execute_collection_query = () => JiraQueryMock.Verify(m => m.EnumerateIssuesByQuery("(id IN (\"id2\",\"id3\"))", 0), Moq.Times.Once);
 
         public It should_return_service_result = () => ActionResult.ShouldEqualTo(JiraQueryResult);
 

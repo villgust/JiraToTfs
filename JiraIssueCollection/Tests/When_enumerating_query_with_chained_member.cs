@@ -21,7 +21,7 @@ namespace JiraRestClient.QueryableTests
 
         public Because of = () => ActionResult = Subject.ToArray();
 
-        public It should_execute_property_query = () => JiraQueryMock.Verify(m => m.EnumerateIssuesByQuery("(assignee=berci)", 0), Moq.Times.Once);
+        public It should_execute_property_query = () => JiraQueryMock.Verify(m => m.EnumerateIssuesByQuery("(assignee=\"berci\")", 0), Moq.Times.Once);
 
         public It should_return_service_result = () => ActionResult.ShouldEqualTo(JiraQueryResult);
 
