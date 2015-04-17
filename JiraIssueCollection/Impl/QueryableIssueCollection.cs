@@ -49,7 +49,7 @@ namespace TechTalk.JiraRestClient
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() { return this.GetEnumerator(); }
     }
-    
+
     internal sealed class QueryEnumerator<TElement> : IEnumerable<TElement>
     {
         private readonly IQueryable<TElement> queryable;
