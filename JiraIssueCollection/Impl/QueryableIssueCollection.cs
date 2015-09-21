@@ -113,7 +113,7 @@ namespace TechTalk.JiraRestClient
         {
             var subexpression = FindSubexpression(expression);
             var result = jiraQuery.EnumerateIssuesByQuery(
-                CreateJql(subexpression.Expression),
+                CreateJql(subexpression.Expression), null,
                 GetStart(subexpression.Expression));
 
             if (subexpression.Complete) return (TResult)result;

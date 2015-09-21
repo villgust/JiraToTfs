@@ -12,7 +12,7 @@ namespace JiraRestClient.QueryableTests
         {
             JiraQueryMock = new Moq.Mock<IJiraClient<IssueFields>>();
             var JiraQueryResult = Strings.Select(s => new Issue<IssueFields> { id = s }).ToArray();
-            JiraQueryMock.Setup(m => m.EnumerateIssuesByQuery(Moq.It.IsAny<string>(), Moq.It.IsAny<int>())).Returns(JiraQueryResult);
+            JiraQueryMock.Setup(m => m.EnumerateIssuesByQuery(Moq.It.IsAny<string>(), Moq.It.IsAny<string[]>(), Moq.It.IsAny<int>())).Returns(JiraQueryResult);
 
             var query = new QueryableIssueCollection<IssueFields>(JiraQueryMock.Object)
                 .Where(i => Strings.Contains(i.id))
@@ -21,7 +21,7 @@ namespace JiraRestClient.QueryableTests
 
         public Because of = () => { /* doing nothing */ };
 
-        public It should_not_query_jira_issues = () => JiraQueryMock.Verify(m => m.EnumerateIssuesByQuery(Moq.It.IsAny<string>(), Moq.It.IsAny<int>()), Moq.Times.Never);
+        public It should_not_query_jira_issues = () => JiraQueryMock.Verify(m => m.EnumerateIssuesByQuery(Moq.It.IsAny<string>(), Moq.It.IsAny<string[]>(), Moq.It.IsAny<int>()), Moq.Times.Never);
 
         static Moq.Mock<IJiraClient<IssueFields>> JiraQueryMock;
 

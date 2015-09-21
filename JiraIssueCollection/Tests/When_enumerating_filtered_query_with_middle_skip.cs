@@ -16,13 +16,13 @@ namespace JiraRestClient.QueryableTests
             Filter2 = i => i.id != "id4";
             JiraQueryMock = new Moq.Mock<IJiraClient<IssueFields>>();
             JiraQueryResult = new[] { new Issue<IssueFields> { id = "id3" }, new Issue<IssueFields> { id = "id4" } };
-            JiraQueryMock.Setup(m => m.EnumerateIssuesByQuery(Moq.It.IsAny<string>(), Moq.It.IsAny<int>())).Returns(JiraQueryResult);
+            JiraQueryMock.Setup(m => m.EnumerateIssuesByQuery(Moq.It.IsAny<string>(), Moq.It.IsAny<string[]>(), Moq.It.IsAny<int>())).Returns(JiraQueryResult);
             Subject = new QueryableIssueCollection<IssueFields>(JiraQueryMock.Object).Where(Filter1).Skip(1).Where(Filter2);
         };
 
         public Because of = () => ActionResult = Subject.ToArray();
 
-        public It should_execute_partial_filter_with_skip = () => JiraQueryMock.Verify(m => m.EnumerateIssuesByQuery("(id!=\"id1\")", 1), Moq.Times.Once);
+        public It should_execute_partial_filter_with_skip = () => JiraQueryMock.Verify(m => m.EnumerateIssuesByQuery("(id!=\"id1\")", null, 1), Moq.Times.Once);
 
         public It should_return_filtered_service_result = () => ActionResult.ShouldEqualTo(JiraQueryResult.Where(Filter2.Compile()));
 

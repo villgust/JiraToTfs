@@ -15,13 +15,13 @@ namespace JiraRestClient.QueryableTests
             Action = i => i.id;
             JiraQueryMock = new Moq.Mock<IJiraClient<IssueFields>>();
             JiraQueryResult = new[] { new Issue<IssueFields> { id = "id1" }, new Issue<IssueFields> { id = "id2" } };
-            JiraQueryMock.Setup(m => m.EnumerateIssuesByQuery(Moq.It.IsAny<string>(), Moq.It.IsAny<int>())).Returns(JiraQueryResult);
+            JiraQueryMock.Setup(m => m.EnumerateIssuesByQuery(Moq.It.IsAny<string>(), Moq.It.IsAny<string[]>(), Moq.It.IsAny<int>())).Returns(JiraQueryResult);
             Subject = new QueryableIssueCollection<IssueFields>(JiraQueryMock.Object).Select(Action);
         };
 
         public Because of = () => ActionResult = Subject.ToArray();
 
-        public It should_execute_empty_query = () => JiraQueryMock.Verify(m => m.EnumerateIssuesByQuery("", 0), Moq.Times.Once);
+        public It should_execute_empty_query = () => JiraQueryMock.Verify(m => m.EnumerateIssuesByQuery("", null, 0), Moq.Times.Once);
 
         public It should_return_converted_result = () => ActionResult.ShouldEqualTo(JiraQueryResult.Select(Action.Compile()));
 

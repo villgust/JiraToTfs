@@ -22,13 +22,13 @@ namespace JiraRestClient.QueryableTests
                 new Issue<IssueFields> { id = "id3", fields = new IssueFields { assignee = new JiraUser { name = "bar" } } },
                 new Issue<IssueFields> { id = null, fields = new IssueFields { assignee = new JiraUser { name = "baz" } } },
             };
-            JiraQueryMock.Setup(m => m.EnumerateIssuesByQuery(Moq.It.IsAny<string>(), Moq.It.IsAny<int>())).Returns(JiraQueryResult);
+            JiraQueryMock.Setup(m => m.EnumerateIssuesByQuery(Moq.It.IsAny<string>(), Moq.It.IsAny<string[]>(), Moq.It.IsAny<int>())).Returns(JiraQueryResult);
             Subject = new QueryableIssueCollection<IssueFields>(JiraQueryMock.Object).Where(Filter1).Where(Filter2).Where(Filter3);
         };
 
         public Because of = () => ActionResult = Subject.ToArray();
 
-        public It should_execute_supported_subquery = () => JiraQueryMock.Verify(m => m.EnumerateIssuesByQuery("(id!=\"id1\")", 0), Moq.Times.Once);
+        public It should_execute_supported_subquery = () => JiraQueryMock.Verify(m => m.EnumerateIssuesByQuery("(id!=\"id1\")", null, 0), Moq.Times.Once);
 
         public It should_return_filtered_service_result = () => ActionResult.ShouldEqualTo(JiraQueryResult.Where(Filter2.Compile()).Where(Filter3.Compile()));
 

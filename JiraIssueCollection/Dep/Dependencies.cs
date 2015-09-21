@@ -8,7 +8,7 @@ namespace TechTalk.JiraRestClient
     public interface IJiraClient<TIssueFields> where TIssueFields : IssueFields, new()
     {
         IQueryable<Issue<TIssueFields>> QueryIssues();
-        IEnumerable<Issue<TIssueFields>> EnumerateIssuesByQuery(string jqlQuery, int startIndex);
+        IEnumerable<Issue<TIssueFields>> EnumerateIssuesByQuery(string jqlQuery, string[] fields, int startIndex);
     }
 
     public class Issue<TIssueFields> : IssueRef where TIssueFields : IssueFields, new()

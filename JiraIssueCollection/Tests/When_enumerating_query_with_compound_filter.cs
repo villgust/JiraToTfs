@@ -15,13 +15,13 @@ namespace JiraRestClient.QueryableTests
             Filter = i => i.id != "id1" && i.id != "id3" || i.id == "id2";
             JiraQueryMock = new Moq.Mock<IJiraClient<IssueFields>>();
             JiraQueryResult = new[] { new Issue<IssueFields> { id = "id2" } };
-            JiraQueryMock.Setup(m => m.EnumerateIssuesByQuery(Moq.It.IsAny<string>(), Moq.It.IsAny<int>())).Returns(JiraQueryResult);
+            JiraQueryMock.Setup(m => m.EnumerateIssuesByQuery(Moq.It.IsAny<string>(), Moq.It.IsAny<string[]>(), Moq.It.IsAny<int>())).Returns(JiraQueryResult);
             Subject = new QueryableIssueCollection<IssueFields>(JiraQueryMock.Object).Where(Filter);
         };
 
         public Because of = () => ActionResult = Subject.ToArray();
 
-        public It should_execute_compound_filtered_query = () => JiraQueryMock.Verify(m => m.EnumerateIssuesByQuery("(((id!=\"id1\") AND (id!=\"id3\")) OR (id=\"id2\"))", 0), Moq.Times.Once);
+        public It should_execute_compound_filtered_query = () => JiraQueryMock.Verify(m => m.EnumerateIssuesByQuery("(((id!=\"id1\") AND (id!=\"id3\")) OR (id=\"id2\"))", null, 0), Moq.Times.Once);
 
         public It should_return_service_result = () => ActionResult.ShouldEqualTo(JiraQueryResult);
 
