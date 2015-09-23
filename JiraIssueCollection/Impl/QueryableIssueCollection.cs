@@ -69,14 +69,6 @@ namespace TechTalk.JiraRestClient
         }
     }
 
-    internal static class QueryEnumerator
-    {
-        public static IEnumerable<TElement> Create<TElement>(IQueryable<TElement> queryable)
-        {
-            return new QueryEnumerator<TElement>(queryable);
-        }
-    }
-
     internal sealed class QueryableIssueCollectionProvider<TIssueFields> : IQueryProvider where TIssueFields : IssueFields, new()
     {
         private readonly Type resultType = typeof(IEnumerable<Issue<TIssueFields>>);
@@ -99,7 +91,7 @@ namespace TechTalk.JiraRestClient
             var subquery = new QueryableIssueCollection<TIssueFields>(this, subexpression.Expression);
             if (subexpression.Complete) return (IQueryable<TElement>)(object)subquery;
 
-            var baseQuery = QueryEnumerator.Create(subquery).AsQueryable();
+            var baseQuery = new QueryEnumerator<Issue<TIssueFields>>(subquery).AsQueryable();
             var topExpression = SplitExpression(expression, subexpression.Expression, baseQuery);
             return baseQuery.Provider.CreateQuery<TElement>(topExpression);
         }
