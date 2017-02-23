@@ -38,7 +38,7 @@ namespace TicketImporter
     {
         public JiraProject(string jiraServer, string jiraProject, string userName, string password)
         {
-            jira = new JiraClient(jiraServer, userName, password);
+            jira = new JiraClient(jiraServer, userName, password, true);
             jira.OnPercentComplete += onPercentComplete;
             this.userName = userName;
             this.password = password;

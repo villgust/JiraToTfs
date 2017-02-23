@@ -66,8 +66,11 @@ namespace TechTalk.JiraRestClient
         private readonly IJiraClient<IssueFields> client;
 
         public JiraClient(string baseUrl, string username, string password)
+         : this(baseUrl, username, password, false) { }
+
+        public JiraClient(string baseUrl, string username, string password, bool isParallel)
         {
-            client = new JiraClient<IssueFields>(baseUrl, username, password, true);
+            client = new JiraClient<IssueFields>(baseUrl, username, password, isParallel);
             client.OnPercentComplete += onPercentComplete;
         }
 
