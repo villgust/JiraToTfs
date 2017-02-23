@@ -1,7 +1,13 @@
-﻿using System;
+﻿// Note: JiraRestClient has been modified to work with the JiraToTfs importer.
+//       Replacing with an updated version will loose these changes and hence
+//       break the import.
+//JIRA REST API documentation: https://docs.atlassian.com/jira/REST/latest
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using TrackProgress;
 
 namespace TechTalk.JiraRestClient
 {
@@ -9,10 +15,13 @@ namespace TechTalk.JiraRestClient
     {
         /// <summary>Returns all issues for the given project</summary>
         IEnumerable<Issue> GetIssues(String projectKey);
+
         /// <summary>Returns all issues of the specified type for the given project</summary>
         IEnumerable<Issue> GetIssues(String projectKey, String issueType);
+
         /// <summary>Enumerates through all issues for the given project</summary>
         IEnumerable<Issue> EnumerateIssues(String projectKey);
+
         /// <summary>Enumerates through all issues of the specified type for the given project</summary>
         IEnumerable<Issue> EnumerateIssues(String projectKey, String issueType);
 
@@ -25,6 +34,7 @@ namespace TechTalk.JiraRestClient
 
         /// <summary>Returns the issue identified by the given ref</summary>
         Issue LoadIssue(String issueRef);
+
         /// <summary>Returns the issue identified by the given ref</summary>
         Issue LoadIssue(IssueRef issueRef);
         /// <summary>Creates an issue of the specified type for the given project</summary>
@@ -60,6 +70,7 @@ namespace TechTalk.JiraRestClient
 
         /// <summary>Returns all links for the given issue</summary>
         IEnumerable<IssueLink> GetIssueLinks(IssueRef issue);
+
         /// <summary>Returns the link between two issues of the given relation</summary>
         IssueLink LoadIssueLink(IssueRef parent, IssueRef child, String relationship);
         /// <summary>Creates a link between two issues with the given relation</summary>
@@ -79,17 +90,36 @@ namespace TechTalk.JiraRestClient
         /// <summary>Returns all issue types</summary>
         IEnumerable<IssueType> GetIssueTypes();
 
+        /// <summary>Returns all issue statuses</summary>
+        IEnumerable<Status> GetIssueStatuses();
+
+        /// <summary>Returns all issue priorities (Critical, major minor etc)</summary>
+        IEnumerable<Priority> GetIssuePriorities();
+
         /// <summary>Returns information about the JIRA server</summary>
         ServerInfo GetServerInfo();
+
+        /// <summary>Progress update when reading / enumerating through large number of Jira entries</summary>
+        event PercentComplete OnPercentComplete;
+
+        /// <summary>Returns the change-log for a given issue (currently excludes Transition history)</summary>
+        IEnumerable<History> GetChangeLog(IssueRef issue);
     }
 
     public class JiraClient : IJiraClient
     {
         private readonly IJiraClient<IssueFields> client;
+        public event PercentComplete OnPercentComplete;
+
         public JiraClient(string baseUrl, string username, string password)
+         : this(baseUrl, username, password, false) { }
+
+        public JiraClient(string baseUrl, string username, string password, bool isParallel)
         {
-            client = new JiraClient<IssueFields>(baseUrl, username, password);
+            client = new JiraClient<IssueFields>(baseUrl, username, password, isParallel);
+            client.OnPercentComplete += onPercentComplete;
         }
+
 
         public IEnumerable<Issue> GetIssues(String projectKey)
         {
@@ -247,6 +277,29 @@ namespace TechTalk.JiraRestClient
         {
             return client.GetServerInfo();
         }
+
+        public IEnumerable<Status> GetIssueStatuses()
+        {
+            return client.GetIssueStatuses();
+        }
+
+        public IEnumerable<Priority> GetIssuePriorities()
+        {
+            return client.GetIssuePriorities();
+        }
+
+        public IEnumerable<History> GetChangeLog(IssueRef issue)
+        {
+            return client.GetChangeLog(issue);
+        }
+
+        private void onPercentComplete(int percentComplete)
+        {
+            if (OnPercentComplete != null)
+            {
+                OnPercentComplete(percentComplete);
+            }
+        }
     }
 
     public class Issue : Issue<IssueFields>
@@ -263,6 +316,7 @@ namespace TechTalk.JiraRestClient
                 key = other.key,
                 self = other.self,
                 fields = other.fields,
+                renderedFields = other.renderedFields
             };
         }
     }

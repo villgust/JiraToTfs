@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace TechTalk.JiraRestClient
+﻿namespace TechTalk.JiraRestClient
 {
     public class IssueLink
     {
@@ -12,7 +10,6 @@ namespace TechTalk.JiraRestClient
         }
 
         public string id { get; set; }
-
         public LinkType type { get; set; }
         public IssueRef outwardIssue { get; set; }
         public IssueRef inwardIssue { get; set; }
