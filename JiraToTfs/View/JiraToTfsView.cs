@@ -20,12 +20,13 @@
 */
 #endregion
 
+using JiraToTfs.Presenter;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
-using JiraToTfs.Presenter;
 using TicketImporter;
 using TicketImporter.Interface;
 
@@ -205,7 +206,7 @@ namespace JiraToTfs.View
             set { noUsersPanel.Visible = value; }
         }
 
-        public void ShowFailedTickets(List<IFailedTicket> failedTickets)
+        public void ShowFailedTickets(ConcurrentBag<IFailedTicket> failedTickets)
         {
             var view = new TicektsNotImportedView(failedTickets);
             view.OnShowCustomFieldMappings += () => { presenter.OnShowCustomFieldMappings(); };

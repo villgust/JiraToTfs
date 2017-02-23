@@ -140,7 +140,7 @@ namespace JiraToTfs.View
             jiraGrid.Rows.Clear();
             foreach (var mapping in currentMappings)
             {
-                jiraGrid.Rows.Add(mapping.Key, mapping.Value);
+                jiraGrid.Rows.Add(false, mapping.Key, mapping.Value);
             }
         }
 
@@ -148,9 +148,12 @@ namespace JiraToTfs.View
         {
             foreach (DataGridViewRow row in jiraGrid.Rows)
             {
-                string name = row.Cells[0].EditedFormattedValue.ToString(),
-                    Value = (row.Cells[1].EditedFormattedValue != null
-                        ? row.Cells[1].EditedFormattedValue.ToString()
+                if ((bool)row.Cells[0].EditedFormattedValue == false)
+                    continue;
+
+                string name = row.Cells[1].EditedFormattedValue.ToString(),
+                    Value = (row.Cells[2].EditedFormattedValue != null
+                        ? row.Cells[2].EditedFormattedValue.ToString()
                         : "");
                 yield return new KeyValuePair<string, string>(name, Value);
             }

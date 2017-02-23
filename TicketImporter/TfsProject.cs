@@ -33,6 +33,7 @@ using Microsoft.TeamFoundation.VersionControl.Client;
 using Microsoft.TeamFoundation.WorkItemTracking.Client;
 using TicketImporter.Interface;
 using TrackProgress;
+using System.Collections.Concurrent;
 
 namespace TicketImporter
 {
@@ -46,8 +47,8 @@ namespace TicketImporter
         private TfsFieldMap tfsFieldMap;
         private TfsStateMap tfsStateMap;
         private TfsPriorityMap tfsPriorityMap;
-        private Dictionary<Ticket, WorkItem> newlyImported;
-        private Dictionary<string, WorkItem> previouslyImported;
+        private ConcurrentDictionary<Ticket, WorkItem> newlyImported;
+        private ConcurrentDictionary<string, WorkItem> previouslyImported;
         private string externalReferenceTag;
         private readonly TfsUsers tfsUsers;
         private readonly bool supportsHtml;
@@ -402,7 +403,7 @@ namespace TicketImporter
                 tfsFieldMap = new TfsFieldMap(Fields);
                 tfsStateMap = new TfsStateMap(this);
                 tfsPriorityMap = new TfsPriorityMap();
-                newlyImported = new Dictionary<Ticket, WorkItem>();
+                newlyImported = new ConcurrentDictionary<Ticket, WorkItem>();
                 findPreviouslyImportedTickets();
             }
             else
@@ -571,7 +572,7 @@ namespace TicketImporter
 
         private void findPreviouslyImportedTickets()
         {
-            previouslyImported = new Dictionary<string, WorkItem>();
+            previouslyImported = new ConcurrentDictionary<string, WorkItem>();
             var workItemStore = (WorkItemStore) tfs.GetService(typeof (WorkItemStore));
 
             var query = string.Format("Select [ID] From WorkItems where [Team Project] = '{0}' AND [Hyperlink Count] > 0", project);

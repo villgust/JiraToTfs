@@ -20,14 +20,14 @@
 */
 #endregion
 
-using System;
-using System.ComponentModel;
-using System.IO;
-using System.Reflection;
 using JiraToTfs.Properties;
 using JiraToTfs.View;
 using log4net;
 using Microsoft.TeamFoundation.Client;
+using System;
+using System.ComponentModel;
+using System.IO;
+using System.Reflection;
 using TicketImporter;
 
 namespace JiraToTfs.Presenter

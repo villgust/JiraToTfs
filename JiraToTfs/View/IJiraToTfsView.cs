@@ -20,6 +20,7 @@
 */
 #endregion
 
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using TicketImporter;
 using TicketImporter.Interface;
@@ -44,7 +45,7 @@ namespace JiraToTfs.View
         bool WarnAboutImpersonation { set; }
         bool WarnAboutNoUsers { set; }
         void InformUserOfDetailedProgress(string info);
-        void ShowFailedTickets(List<IFailedTicket> failedTickets);
+        void ShowFailedTickets(ConcurrentBag<IFailedTicket> failedTickets);
         void ImportStarted();
         void ImportFinished();
         void ShowReport(string path);

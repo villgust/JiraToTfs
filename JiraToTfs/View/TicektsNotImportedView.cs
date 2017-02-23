@@ -21,7 +21,7 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Windows.Forms;
 using TicketImporter.Interface;
 
@@ -33,7 +33,7 @@ namespace JiraToTfs.View
     {
         public ShowCustomFieldMappings OnShowCustomFieldMappings;
 
-        public TicektsNotImportedView(List<IFailedTicket> failedTickets)
+        public TicektsNotImportedView(ConcurrentBag<IFailedTicket> failedTickets)
         {
             InitializeComponent();
 
