@@ -47,8 +47,8 @@ namespace TicketImporter
         private TfsFieldMap tfsFieldMap;
         private TfsStateMap tfsStateMap;
         private TfsPriorityMap tfsPriorityMap;
-        private ConcurrentDictionary<Ticket, WorkItem> newlyImported;
-        private ConcurrentDictionary<string, WorkItem> previouslyImported;
+        private IDictionary<Ticket, WorkItem> newlyImported;
+        private IDictionary<string, WorkItem> previouslyImported;
         private string externalReferenceTag;
         private readonly TfsUsers tfsUsers;
         private readonly bool supportsHtml;

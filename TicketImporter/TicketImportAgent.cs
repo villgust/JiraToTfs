@@ -20,15 +20,14 @@
 */
 #endregion
 
+using log4net;
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Reflection;
-using log4net;
+using System.Threading.Tasks;
 using TicketImporter.Interface;
 using TrackProgress;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
 
 namespace TicketImporter
 {

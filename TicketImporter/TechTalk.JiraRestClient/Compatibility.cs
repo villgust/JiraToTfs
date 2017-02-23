@@ -67,7 +67,7 @@ namespace TechTalk.JiraRestClient
 
         public JiraClient(string baseUrl, string username, string password)
         {
-            client = new JiraClient<IssueFields>(baseUrl, username, password);
+            client = new JiraClient<IssueFields>(baseUrl, username, password, true);
             client.OnPercentComplete += onPercentComplete;
         }
 

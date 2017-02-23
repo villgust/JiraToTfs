@@ -206,7 +206,6 @@
             this.jiraGrid.ShowRowErrors = false;
             this.jiraGrid.Size = new System.Drawing.Size(518, 508);
             this.jiraGrid.TabIndex = 18;
-            this.jiraGrid.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.jiraGrid_CellContentClick);
             // 
             // fieldTab
             // 

@@ -3,14 +3,14 @@
 //       break the import.
 //JIRA REST API documentation: https://docs.atlassian.com/jira/REST/latest
 
+using RestSharp;
+using RestSharp.Deserializers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text;
-using RestSharp;
-using RestSharp.Deserializers;
 using TrackProgress;
 
 namespace TechTalk.JiraRestClient
@@ -18,16 +18,23 @@ namespace TechTalk.JiraRestClient
     public class JiraClient<TIssueFields> : IJiraClient<TIssueFields> where TIssueFields : IssueFields, new()
     {
         private readonly RestClient client;
+        private readonly string baseUrl;
         private readonly JsonDeserializer deserializer;
         private readonly string password;
         private readonly string username;
+        private readonly bool isParallel;
 
         public JiraClient(string baseUrl, string username, string password)
+            : this(baseUrl, username, password, false) { }
+
+        public JiraClient(string baseUrl, string username, string password, bool isParallel)
         {
             this.username = username;
             this.password = password;
+            this.baseUrl = baseUrl + (baseUrl.EndsWith("/") ? "" : "/") + "rest/api/2/";
+            this.isParallel = isParallel;
+            this.client = isParallel ? new RestClient(baseUrl) : null;
             deserializer = new JsonDeserializer();
-            client = new RestClient {BaseUrl = baseUrl + (baseUrl.EndsWith("/") ? "" : "/") + "rest/api/2/"};
         }
 
         public IEnumerable<Issue<TIssueFields>> GetIssues(String projectKey)
@@ -72,7 +79,7 @@ namespace TechTalk.JiraRestClient
                 var path = String.Format("issue/{0}?expand=renderedFields", issueRef);
                 var request = CreateRequest(Method.GET, path);
 
-                var response = client.Execute(request);
+                var response = executeRequest(request);
                 AssertStatus(response, HttpStatusCode.OK);
 
                 var issue = deserializer.Deserialize<Issue<TIssueFields>>(response);
@@ -94,7 +101,7 @@ namespace TechTalk.JiraRestClient
                 var path = String.Format("issue/{0}/comment", issue.id);
                 var request = CreateRequest(Method.GET, path);
 
-                var response = client.Execute(request);
+                var response = executeRequest(request);
                 AssertStatus(response, HttpStatusCode.OK);
 
                 var data = deserializer.Deserialize<CommentsContainer>(response);
@@ -142,7 +149,7 @@ namespace TechTalk.JiraRestClient
                 var request = CreateRequest(Method.GET, path);
                 request.AddHeader("ContentType", "application/json");
 
-                var response = client.Execute(request);
+                var response = executeRequest(request);
                 AssertStatus(response, HttpStatusCode.OK);
 
                 return deserializer.Deserialize<List<RemoteLinkResult>>(response)
@@ -162,7 +169,7 @@ namespace TechTalk.JiraRestClient
                 var request = CreateRequest(Method.GET, "issuetype");
                 request.AddHeader("ContentType", "application/json");
 
-                var response = client.Execute(request);
+                var response = executeRequest(request);
                 AssertStatus(response, HttpStatusCode.OK);
 
                 var data = deserializer.Deserialize<List<IssueType>>(response);
@@ -182,7 +189,7 @@ namespace TechTalk.JiraRestClient
                 var request = CreateRequest(Method.GET, "status");
                 request.AddHeader("ContentType", "application/json");
 
-                var response = client.Execute(request);
+                var response = executeRequest(request);
                 AssertStatus(response, HttpStatusCode.OK);
 
                 var data = deserializer.Deserialize<List<Status>>(response);
@@ -202,7 +209,7 @@ namespace TechTalk.JiraRestClient
                 var request = CreateRequest(Method.GET, "priority");
                 request.AddHeader("ContentType", "application/json");
 
-                var response = client.Execute(request);
+                var response = executeRequest(request);
                 AssertStatus(response, HttpStatusCode.OK);
 
                 var data = deserializer.Deserialize<List<Priority>>(response);
@@ -222,7 +229,7 @@ namespace TechTalk.JiraRestClient
                 var request = CreateRequest(Method.GET, "serverInfo");
                 request.AddHeader("ContentType", "application/json");
 
-                var response = client.Execute(request);
+                var response = executeRequest(request);
                 AssertStatus(response, HttpStatusCode.OK);
 
                 return deserializer.Deserialize<ServerInfo>(response);
@@ -243,7 +250,7 @@ namespace TechTalk.JiraRestClient
                 var path = String.Format("issue/{0}?expand=changelog&fields=summary", issue.id);
                 var request = CreateRequest(Method.GET, path);
 
-                var response = client.Execute(request);
+                var response = executeRequest(request);
                 AssertStatus(response, HttpStatusCode.OK);
 
                 var data = deserializer.Deserialize<ChangeLogContainer>(response);
@@ -287,7 +294,7 @@ namespace TechTalk.JiraRestClient
                     queryCount);
                 var request = CreateRequest(Method.GET, path);
 
-                var response = client.Execute(request);
+                var response = executeRequest(request);
                 AssertStatus(response, HttpStatusCode.OK);
 
                 var data = deserializer.Deserialize<IssueContainer<TIssueFields>>(response);
@@ -315,7 +322,7 @@ namespace TechTalk.JiraRestClient
                 var path = String.Format("issueLink/{0}", link.id);
                 var request = CreateRequest(Method.DELETE, path);
 
-                var response = client.Execute(request);
+                var response = executeRequest(request);
                 AssertStatus(response, HttpStatusCode.NoContent);
             }
             catch (Exception ex)
@@ -330,6 +337,18 @@ namespace TechTalk.JiraRestClient
             if (OnPercentComplete != null)
             {
                 OnPercentComplete(percentComplete);
+            }
+        }
+
+        private IRestResponse executeRequest(IRestRequest request)
+        {
+            if (isParallel)
+                return new RestClient(baseUrl).Execute(request);
+            else
+            {
+                lock(this) {
+                    return this.client.Execute(request);
+                }
             }
         }
     }

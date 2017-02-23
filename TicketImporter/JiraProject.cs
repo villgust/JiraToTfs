@@ -21,11 +21,13 @@
 #endregion
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using RestSharp.Extensions;
+using System.Threading;
+using System.Threading.Tasks;
 using TechTalk.JiraRestClient;
 using TicketImporter.Interface;
 using TrackProgress;
@@ -85,8 +87,11 @@ namespace TicketImporter
         public IEnumerable<Ticket> Tickets(IAvailableTicketTypes availableTypes)
         {
             var map = new JiraTypeMap(this, availableTypes);
-            foreach (var jiraKey in jira.EnumerateIssues(jiraProject))
+            ConcurrentBag<Ticket> tickets = new ConcurrentBag<Ticket>();
+            Parallel.ForEach (jira.EnumerateIssues(jiraProject), jiraKey =>
             {
+                Console.WriteLine("Thread {0} comming into get ticket", Thread.CurrentThread.ManagedThreadId);
+
                 var issueRef = new IssueRef
                 {
                     id = jiraKey.id,
@@ -177,8 +182,9 @@ namespace TicketImporter
                     ticket.ClosedOn = jiraTicket.fields.resolutiondate;
                 }
 
-                yield return (ticket);
-            }
+                tickets.Add(ticket);
+            });
+            return tickets;
         }
 
         public void DownloadAttachments(Ticket ticket, string downloadFolder)
