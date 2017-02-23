@@ -1,0 +1,30 @@
+﻿<?xml version="1.0"?>
+<package>
+    <metadata>
+        <id>TechTalk.JiraRestClient</id>
+        <version>2.6.0</version>
+        <title>JIRA REST Client</title>
+        <authors>TechTalk</authors>
+        <owners></owners>
+        <description>A simple client for Atlassian JIRA service REST API</description>
+        <releaseNotes></releaseNotes>
+        <summary></summary>
+        <language>en-US</language>
+        <projectUrl>https://github.com/techtalk/JiraRestClient</projectUrl>
+        <iconUrl>https://raw.github.com/techtalk/JiraRestClient/master/PackageIcon.png</iconUrl>
+        <licenseUrl>https://raw.github.com/techtalk/JiraRestClient/master/Licence.txt</licenseUrl>
+        <copyright>Copyright © TechTalk 2013-2015</copyright>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <dependencies>
+            <dependency id="RestSharp" version="[104.1,)" />
+        </dependencies>
+        <frameworkAssemblies>
+            <frameworkAssembly assemblyName="System" targetFramework="net40-Client" />
+            <frameworkAssembly assemblyName="System.Core" targetFramework="net40-Client" />
+        </frameworkAssemblies>
+        <tags>Atlassian JIRA REST client</tags>
+    </metadata>
+    <files>
+        <file src="\bin\TechTalk.JiraRestClient.dll" target="lib/net40-Client/" />
+    </files>
+</package>
