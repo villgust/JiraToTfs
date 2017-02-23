@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JiraToTfs", "JiraToTfs\JiraToTfs.csproj", "{376DC1C9-F19B-4ED0-B4E6-898F424581DC}"
 	ProjectSection(ProjectDependencies) = postProject
 		{CC1E2920-191B-41F7-8071-1268D07D15EA} = {CC1E2920-191B-41F7-8071-1268D07D15EA}
@@ -14,6 +16,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TicketImporter", "TicketImp
 	ProjectSection(ProjectDependencies) = postProject
 		{CC1E2920-191B-41F7-8071-1268D07D15EA} = {CC1E2920-191B-41F7-8071-1268D07D15EA}
 	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "JiraRest", "JiraRest", "{74DD8F91-C37D-4D3B-8563-735B833196DB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechTalk.JiraRestClient", "JiraRestClient\TechTalk.JiraRestClient\TechTalk.JiraRestClient.csproj", "{210529FA-454E-4C32-A2C8-353ECBD4DA05}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -65,8 +71,23 @@ Global
 		{E71EAD9C-A44E-440A-97B5-6BFDE17CB7AD}.Release|Mixed Platforms.Build.0 = Release|x86
 		{E71EAD9C-A44E-440A-97B5-6BFDE17CB7AD}.Release|x86.ActiveCfg = Release|x86
 		{E71EAD9C-A44E-440A-97B5-6BFDE17CB7AD}.Release|x86.Build.0 = Release|x86
+		{210529FA-454E-4C32-A2C8-353ECBD4DA05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{210529FA-454E-4C32-A2C8-353ECBD4DA05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{210529FA-454E-4C32-A2C8-353ECBD4DA05}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{210529FA-454E-4C32-A2C8-353ECBD4DA05}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{210529FA-454E-4C32-A2C8-353ECBD4DA05}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{210529FA-454E-4C32-A2C8-353ECBD4DA05}.Debug|x86.Build.0 = Debug|Any CPU
+		{210529FA-454E-4C32-A2C8-353ECBD4DA05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{210529FA-454E-4C32-A2C8-353ECBD4DA05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{210529FA-454E-4C32-A2C8-353ECBD4DA05}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{210529FA-454E-4C32-A2C8-353ECBD4DA05}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{210529FA-454E-4C32-A2C8-353ECBD4DA05}.Release|x86.ActiveCfg = Release|Any CPU
+		{210529FA-454E-4C32-A2C8-353ECBD4DA05}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{210529FA-454E-4C32-A2C8-353ECBD4DA05} = {74DD8F91-C37D-4D3B-8563-735B833196DB}
 	EndGlobalSection
 EndGlobal
