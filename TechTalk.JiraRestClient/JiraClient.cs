@@ -1,12 +1,18 @@
-﻿using System;
+﻿// Note: JiraRestClient has been modified to work with the JiraToTfs importer.
+//       Replacing with an updated version will loose these changes and hence
+//       break the import.
+//JIRA REST API documentation: https://docs.atlassian.com/jira/REST/latest
+
+using RestSharp;
+using RestSharp.Deserializers;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
-using RestSharp;
-using RestSharp.Deserializers;
+using TrackProgress;
 
 namespace TechTalk.JiraRestClient
 {
@@ -18,12 +24,19 @@ namespace TechTalk.JiraRestClient
         private readonly string password;
         private readonly JsonDeserializer deserializer;
         private readonly string baseApiUrl;
+        private readonly RestClient client;
+        private readonly bool isParallel;
+
         public JiraClient(string baseUrl, string username, string password)
+            : this(baseUrl, username, password, false) { }
+
+        public JiraClient(string baseUrl, string username, string password, bool isParallel)
         {
             this.username = username;
             this.password = password;
-
             baseApiUrl = new Uri(new Uri(baseUrl), "rest/api/2/").ToString();
+            this.isParallel = isParallel;
+            this.client = isParallel ? new RestClient(baseUrl) : null;
             deserializer = new JsonDeserializer();
         }
 
@@ -150,7 +163,7 @@ namespace TechTalk.JiraRestClient
         {
             try
             {
-                var path = String.Format("issue/{0}", issueRef);
+                var path = String.Format("issue/{0}?expand=renderedFields", issueRef);
                 var request = CreateRequest(Method.GET, path);
 
                 var response = ExecuteRequest(request);
@@ -628,12 +641,51 @@ namespace TechTalk.JiraRestClient
 
                 var data = deserializer.Deserialize<List<IssueType>>(response);
                 return data;
-
             }
             catch (Exception ex)
             {
                 Trace.TraceError("GetIssueTypes() error: {0}", ex);
                 throw new JiraClientException("Could not load issue types", ex);
+            }
+        }
+
+        public IEnumerable<Status> GetIssueStatuses()
+        {
+            try
+            {
+                var request = CreateRequest(Method.GET, "status");
+                request.AddHeader("ContentType", "application/json");
+
+                var response = ExecuteRequest(request);
+                AssertStatus(response, HttpStatusCode.OK);
+
+                var data = deserializer.Deserialize<List<Status>>(response);
+                return data;
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError("GetIssueStatuses() error: {0}", ex);
+                throw new JiraClientException("Could not load issue statuses", ex);
+            }
+        }
+
+        public IEnumerable<Priority> GetIssuePriorities()
+        {
+            try
+            {
+                var request = CreateRequest(Method.GET, "priority");
+                request.AddHeader("ContentType", "application/json");
+
+                var response = ExecuteRequest(request);
+                AssertStatus(response, HttpStatusCode.OK);
+
+                var data = deserializer.Deserialize<List<Priority>>(response);
+                return data;
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError("GetIssuePriorities() error: {0}", ex);
+                throw new JiraClientException("Could not load issue priorities", ex);
             }
         }
 
@@ -653,6 +705,73 @@ namespace TechTalk.JiraRestClient
             {
                 Trace.TraceError("GetServerInfo() error: {0}", ex);
                 throw new JiraClientException("Could not retrieve server information", ex);
+            }
+        }
+
+        public event PercentComplete OnPercentComplete;
+
+        public IEnumerable<History> GetChangeLog(IssueRef issue)
+        {
+            try
+            {
+                var path = String.Format("issue/{0}?expand=changelog&fields=summary", issue.id);
+                var request = CreateRequest(Method.GET, path);
+
+                var response = ExecuteRequest(request);
+                AssertStatus(response, HttpStatusCode.OK);
+
+                var data = deserializer.Deserialize<ChangeLogContainer>(response);
+                return data.changelog.histories ?? Enumerable.Empty<History>();
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError("GetChangeLog(IssueRef issue) error: {0}", ex);
+                throw new JiraClientException("Could not load change-log", ex);
+            }
+        }
+
+        
+        private IEnumerable<Issue<TIssueFields>> EnumerateIssuesInternal(String projectKey, String issueType)
+        {
+            var queryCount = 50;
+            var resultCount = 0;
+            onPercentComplete(0);
+
+            while (true)
+            {
+                var jql = String.Format("project={0}", Uri.EscapeUriString(projectKey));
+                if (!String.IsNullOrEmpty(issueType))
+                    jql += String.Format("+AND+issueType={0}", Uri.EscapeUriString(issueType));
+                var path = String.Format("search?jql={0}&startAt={1}&maxResults={2}&fields=issueKey", jql, resultCount,
+                    queryCount);
+                var request = CreateRequest(Method.GET, path);
+
+                var response = ExecuteRequest(request);
+                AssertStatus(response, HttpStatusCode.OK);
+
+                var data = deserializer.Deserialize<IssueContainer<TIssueFields>>(response);
+                var issues = data.issues ?? Enumerable.Empty<Issue<TIssueFields>>();
+
+                foreach (var item in issues) yield return item;
+                resultCount += issues.Count();
+
+                var currentPercent = (resultCount*100)/data.total;
+                if (currentPercent > 100)
+                {
+                    currentPercent = 100;
+                }
+                onPercentComplete(currentPercent);
+
+                if (resultCount < data.total) continue;
+                break;
+            }
+        }
+
+        private void onPercentComplete(int percentComplete)
+        {
+            if (OnPercentComplete != null)
+            {
+                OnPercentComplete(percentComplete);
             }
         }
     }

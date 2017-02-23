@@ -42,10 +42,18 @@
       <Link>QueryableIssueCollection.cs</Link>
     </Compile>
     <Compile Include="Attachment.cs" />
+    <Compile Include="ChangeLog.cs" />
+    <Compile Include="ChangeLogContainer.cs" />
     <Compile Include="Comment.cs" />
     <Compile Include="CommentsContainer.cs" />
     <Compile Include="Compatibility.cs" />
+    <Compile Include="History.cs" />
     <Compile Include="IssueType.cs" />
+    <Compile Include="JiraString.cs" />
+    <Compile Include="ParentProject.cs" />
+    <Compile Include="Priority.cs" />
+    <Compile Include="ProgressDelegates.cs" />
+    <Compile Include="RenderedFields.cs" />
     <Compile Include="ServerInfo.cs" />
     <Compile Include="WatchersContainer.cs" />
     <Compile Include="IJiraClient.cs" />

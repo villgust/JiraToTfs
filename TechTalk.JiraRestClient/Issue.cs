@@ -1,17 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace TechTalk.JiraRestClient
+﻿namespace TechTalk.JiraRestClient
 {
     public class Issue<TIssueFields> : IssueRef where TIssueFields : IssueFields, new()
     {
-        public Issue() { fields = new TIssueFields(); }
+        public Issue()
+        {
+            expand = "";
+            self = "";
+            fields = new TIssueFields();
+            renderedFields = new RenderedFields();
+        }
 
         public string expand { get; set; }
-
         public string self { get; set; }
-
         public TIssueFields fields { get; set; }
+        public RenderedFields renderedFields { get; set; }
 
         internal static void ExpandLinks<T>(Issue<T> issue) where T : IssueFields, new()
         {
