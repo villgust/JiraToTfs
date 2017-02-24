@@ -84,20 +84,24 @@ namespace TicketImporter
 
         private void clearDownloadFolder()
         {
-            try
+            if (string.IsNullOrWhiteSpace(downloadFolder) == false)
             {
-                if (string.IsNullOrWhiteSpace(downloadFolder) == false)
-                {
-                    var fileInfo = new DirectoryInfo(downloadFolder);
-                    foreach (var file in fileInfo.GetFiles())
-                    {
-                        file.Delete();
-                    }
-                }
+                deleteFolder(new DirectoryInfo(downloadFolder));
             }
-            catch
+        }
+
+        private void deleteFolder(DirectoryInfo toDelete)
+        {
+            foreach (var file in toDelete.GetFiles())
             {
+                try { file.Delete(); } catch { }
             }
+
+            foreach (var file in toDelete.GetDirectories())
+            {
+                deleteFolder(file);
+            }
+            try { toDelete.Delete(); } catch { }
         }
 
         #endregion
@@ -135,8 +139,8 @@ namespace TicketImporter
                     {
                         if (includeAttachments)
                         {
-                            clearDownloadFolder();
-                            ticketSource.DownloadAttachments(passedTicket, downloadFolder);
+                            var ticketDownloadFolder = makeDownloadFolder(passedTicket.ID);
+                            ticketSource.DownloadAttachments(passedTicket, ticketDownloadFolder);
                         }
                         else
                         {
@@ -151,13 +155,19 @@ namespace TicketImporter
 
                     if (includeAttachments)
                     {
-                        clearDownloadFolder();
-                        Directory.Delete(downloadFolder);
+                        deleteFolder(new DirectoryInfo(downloadFolder));
                     }
 
                     setCurrentAction("Import complete.");
                 }
             }
+        }
+
+        private string makeDownloadFolder(string id)
+        {
+            var path = Path.Combine(downloadFolder, id);
+            Directory.CreateDirectory(path);
+            return path;
         }
 
         public string GenerateReport()
