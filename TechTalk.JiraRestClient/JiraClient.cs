@@ -28,7 +28,7 @@ namespace TechTalk.JiraRestClient
         private readonly bool isParallel;
 
         public JiraClient(string baseUrl, string username, string password)
-            : this(baseUrl, username, password, false) { }
+            : this(baseUrl, username, password, true) { }
 
         public JiraClient(string baseUrl, string username, string password, bool isParallel)
         {
@@ -49,8 +49,20 @@ namespace TechTalk.JiraRestClient
 
         private IRestResponse ExecuteRequest(RestRequest request)
         {
-            var client = new RestClient(baseApiUrl);
-            return client.Execute(request);
+			//Some jira server firewall limit the number of connections
+			//We'll need keep single connection is this case
+            if (isParallel)
+            {
+                var client = new RestClient(baseApiUrl);
+                return client.Execute(request);
+            } else
+            {
+                lock (this)
+                {
+					//Make sure our connection is called once at a time
+                    return client.Execute(request);
+                }
+            }
         }
 
         private void AssertStatus(IRestResponse response, HttpStatusCode status)
@@ -64,7 +76,7 @@ namespace TechTalk.JiraRestClient
 
         public IEnumerable<Issue<TIssueFields>> GetIssues(String projectKey)
         {
-            return EnumerateIssues(projectKey, null).ToArray();
+            return EnumerateIssues(projectKey, string.Empty).ToArray();
         }
 
         public IEnumerable<Issue<TIssueFields>> GetIssues(String projectKey, String issueType)
@@ -74,12 +86,17 @@ namespace TechTalk.JiraRestClient
 
         public IEnumerable<Issue<TIssueFields>> EnumerateIssues(String projectKey)
         {
-            return EnumerateIssuesByQuery(CreateCommonJql(projectKey, null), null, 0);
+            return EnumerateIssuesByQuery(CreateCommonJql(projectKey, string.Empty), null, 0);
         }
 
         public IEnumerable<Issue<TIssueFields>> EnumerateIssues(String projectKey, String issueType)
         {
             return EnumerateIssuesByQuery(CreateCommonJql(projectKey, issueType), null, 0);
+        }
+
+        public IEnumerable<Issue<TIssueFields>> EnumerateIssues(String projectKey, IEnumerable<String> issueTypes)
+        {
+            return EnumerateIssuesByQuery(CreateCommonJql(projectKey, issueTypes), null, 0);
         }
 
         private static string CreateCommonJql(String projectKey, String issueType)
@@ -88,8 +105,28 @@ namespace TechTalk.JiraRestClient
             if (!String.IsNullOrEmpty(projectKey))
                 queryParts.Add(String.Format("project={0}", projectKey));
             if (!String.IsNullOrEmpty(issueType))
-                queryParts.Add(String.Format("issueType={0}", issueType));
+                queryParts.Add(CreateIssueTypeQueryPart(issueType));
             return String.Join(" AND ", queryParts);
+        }
+
+        private static string CreateCommonJql(String projectKey, IEnumerable<String> issueTypes)
+        {
+            var queryParts = new List<String>();
+            if (!String.IsNullOrEmpty(projectKey))
+                queryParts.Add(String.Format("project={0}", projectKey));
+            if (issueTypes != null && issueTypes.Any())
+                queryParts.Add(CreateIssueTypeQueryPart(issueTypes));
+            return String.Join(" AND ", queryParts);
+        }
+
+        private static string CreateIssueTypeQueryPart(string issueType)
+        {
+            return String.Format("issueType={0}", issueType);
+        }
+
+        private static string CreateIssueTypeQueryPart(IEnumerable<String> issueTypes)
+        {
+            return String.Format("issueType in ({0})", String.Join(",", issueTypes));
         }
 
         [Obsolete("This method is no longer supported and might be removed in a later release. Use EnumerateIssuesByQuery(jqlQuery, fields, startIndex).ToArray() instead")]
@@ -127,6 +164,7 @@ namespace TechTalk.JiraRestClient
         {
             var queryCount = 50;
             var resultCount = startIndex;
+            onPercentComplete(0);
             while (true)
             {
                 var path = String.Format("search?jql={0}&startAt={1}&maxResults={2}", jqlQuery, resultCount, queryCount);
@@ -142,6 +180,13 @@ namespace TechTalk.JiraRestClient
 
                 foreach (var item in issues) yield return item;
                 resultCount += issues.Count();
+
+                var currentPercent = (resultCount * 100) / data.total;
+                if (currentPercent > 100)
+                {
+                    currentPercent = 100;
+                }
+                onPercentComplete(currentPercent);
 
                 if (resultCount < data.total) continue;
                 else /* all issues received */ break;
@@ -727,43 +772,6 @@ namespace TechTalk.JiraRestClient
             {
                 Trace.TraceError("GetChangeLog(IssueRef issue) error: {0}", ex);
                 throw new JiraClientException("Could not load change-log", ex);
-            }
-        }
-
-        
-        private IEnumerable<Issue<TIssueFields>> EnumerateIssuesInternal(String projectKey, String issueType)
-        {
-            var queryCount = 50;
-            var resultCount = 0;
-            onPercentComplete(0);
-
-            while (true)
-            {
-                var jql = String.Format("project={0}", Uri.EscapeUriString(projectKey));
-                if (!String.IsNullOrEmpty(issueType))
-                    jql += String.Format("+AND+issueType={0}", Uri.EscapeUriString(issueType));
-                var path = String.Format("search?jql={0}&startAt={1}&maxResults={2}&fields=issueKey", jql, resultCount,
-                    queryCount);
-                var request = CreateRequest(Method.GET, path);
-
-                var response = ExecuteRequest(request);
-                AssertStatus(response, HttpStatusCode.OK);
-
-                var data = deserializer.Deserialize<IssueContainer<TIssueFields>>(response);
-                var issues = data.issues ?? Enumerable.Empty<Issue<TIssueFields>>();
-
-                foreach (var item in issues) yield return item;
-                resultCount += issues.Count();
-
-                var currentPercent = (resultCount*100)/data.total;
-                if (currentPercent > 100)
-                {
-                    currentPercent = 100;
-                }
-                onPercentComplete(currentPercent);
-
-                if (resultCount < data.total) continue;
-                break;
             }
         }
 
