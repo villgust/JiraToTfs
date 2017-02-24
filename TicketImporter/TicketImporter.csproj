@@ -41,10 +41,6 @@
     <Reference Include="Microsoft.TeamFoundation.Common, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.TeamFoundation.VersionControl.Client, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.TeamFoundation.WorkItemTracking.Client, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\RestSharp.105.2.3\lib\net4\RestSharp.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -54,34 +50,7 @@
     <Compile Include="AdvancedSettings.cs" />
     <Compile Include="ImportSummary.cs" />
     <Compile Include="Interface\IAvailableTicketTypes.cs" />
-    <Compile Include="TechTalk.JiraRestClient\Attachment.cs" />
-    <Compile Include="TechTalk.JiraRestClient\ChangeLog.cs" />
-    <Compile Include="TechTalk.JiraRestClient\ChangeLogContainer.cs" />
-    <Compile Include="TechTalk.JiraRestClient\Comment.cs" />
-    <Compile Include="TechTalk.JiraRestClient\CommentsContainer.cs" />
-    <Compile Include="TechTalk.JiraRestClient\Compatibility.cs" />
-    <Compile Include="TechTalk.JiraRestClient\History.cs" />
-    <Compile Include="TechTalk.JiraRestClient\IJiraClient.cs" />
-    <Compile Include="TechTalk.JiraRestClient\Issue.cs" />
-    <Compile Include="TechTalk.JiraRestClient\IssueContainer.cs" />
-    <Compile Include="TechTalk.JiraRestClient\IssueFields.cs" />
-    <Compile Include="TechTalk.JiraRestClient\IssueLink.cs" />
-    <Compile Include="TechTalk.JiraRestClient\IssueRef.cs" />
-    <Compile Include="TechTalk.JiraRestClient\IssueType.cs" />
-    <Compile Include="TechTalk.JiraRestClient\JiraClient.cs" />
-    <Compile Include="TechTalk.JiraRestClient\JiraClientException.cs" />
-    <Compile Include="TechTalk.JiraRestClient\JiraUser.cs" />
-    <Compile Include="TechTalk.JiraRestClient\JiraString.cs" />
-    <Compile Include="TechTalk.JiraRestClient\Priority.cs" />
-    <Compile Include="TechTalk.JiraRestClient\ParentProject.cs" />
-    <Compile Include="TechTalk.JiraRestClient\RemoteLink.cs" />
-    <Compile Include="TechTalk.JiraRestClient\RemoteLinkResult.cs" />
-    <Compile Include="TechTalk.JiraRestClient\RenderedFields.cs" />
-    <Compile Include="TechTalk.JiraRestClient\ServerInfo.cs" />
-    <Compile Include="TechTalk.JiraRestClient\Status.cs" />
-    <Compile Include="TechTalk.JiraRestClient\Timetracking.cs" />
-    <Compile Include="TechTalk.JiraRestClient\Transition.cs" />
-    <Compile Include="TechTalk.JiraRestClient\TransitionsContainer.cs" />
+    <Compile Include="ProgressNotifier.cs" />
     <Compile Include="TfsField.cs" />
     <Compile Include="TfsFieldCollection.cs" />
     <Compile Include="TfsFieldFactory.cs" />
@@ -106,13 +75,10 @@
     <Compile Include="Xml.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Progress\Progress.csproj">
-      <Project>{a514cfa1-79a5-4acc-84a9-e8d7ad6ed1c6}</Project>
-      <Name>Progress</Name>
+    <ProjectReference Include="..\JiraRestClient\TechTalk.JiraRestClient\TechTalk.JiraRestClient.csproj">
+      <Project>{210529fa-454e-4c32-a2c8-353ecbd4da05}</Project>
+      <Name>TechTalk.JiraRestClient</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="TechTalk.JiraRestClient\TechTalk.JiraRestClient-Licence.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -20,20 +20,20 @@
 */
 #endregion
 
+using Microsoft.TeamFoundation.Client;
+using Microsoft.TeamFoundation.Server;
+using Microsoft.TeamFoundation.WorkItemTracking.Client;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using Microsoft.TeamFoundation.Client;
-using Microsoft.TeamFoundation.Server;
-using Microsoft.TeamFoundation.VersionControl.Client;
-using Microsoft.TeamFoundation.WorkItemTracking.Client;
+using System.Threading.Tasks;
 using TicketImporter.Interface;
 using TrackProgress;
-using System.Collections.Concurrent;
 
 namespace TicketImporter
 {
@@ -154,7 +154,7 @@ namespace TicketImporter
         {
             get
             {
-                var workItemStore = (WorkItemStore) tfs.GetService(typeof (WorkItemStore));
+                var workItemStore = (WorkItemStore)tfs.GetService(typeof(WorkItemStore));
                 return workItemStore.Projects[project].Store;
             }
         }
@@ -204,7 +204,7 @@ namespace TicketImporter
         public List<string> AllowedValuesForField(string fieldName)
         {
             TfsField field = fields[fieldName];
-            return (field != null? field.AllowedValues : new List<String>());
+            return (field != null ? field.AllowedValues : new List<String>());
         }
 
         #region Progress utility methods
@@ -270,7 +270,7 @@ namespace TicketImporter
                 tfs_impersonated = tfsUsers.Impersonate(toImport.CreatedBy);
             }
 
-            var workItemStore = (WorkItemStore) tfs_impersonated.GetService(typeof (WorkItemStore));
+            var workItemStore = (WorkItemStore)tfs_impersonated.GetService(typeof(WorkItemStore));
             var workItemTypes = workItemStore.Projects[project].WorkItemTypes;
 
             var workItemType = workItemTypes[toImport.TicketType];
@@ -394,7 +394,7 @@ namespace TicketImporter
             importSummary.TargetDetails.Add(string.Format("Template in use      : {0}", processTemplateName));
             failedAttachments = false;
 
-            var workItemStore = (WorkItemStore) tfs.GetService(typeof (WorkItemStore));
+            var workItemStore = (WorkItemStore)tfs.GetService(typeof(WorkItemStore));
             var ableToAdd = workItemStore.Projects[project].HasWorkItemWriteRights;
 
             if (ableToAdd)
@@ -562,7 +562,8 @@ namespace TicketImporter
         private WorkItem findWorkItem(string sourceId)
         {
             var workItem = (from ticket in newlyImported
-                            where string.CompareOrdinal(ticket.Key.ID, sourceId) == 0 select ticket.Value).FirstOrDefault();
+                            where string.CompareOrdinal(ticket.Key.ID, sourceId) == 0
+                            select ticket.Value).FirstOrDefault();
             if (workItem == null)
             {
                 previouslyImported.TryGetValue(sourceId, out workItem);
@@ -573,7 +574,7 @@ namespace TicketImporter
         private void findPreviouslyImportedTickets()
         {
             previouslyImported = new ConcurrentDictionary<string, WorkItem>();
-            var workItemStore = (WorkItemStore) tfs.GetService(typeof (WorkItemStore));
+            var workItemStore = (WorkItemStore)tfs.GetService(typeof(WorkItemStore));
 
             var query = string.Format("Select [ID] From WorkItems where [Team Project] = '{0}' AND [Hyperlink Count] > 0", project);
             var queryResults = workItemStore.Query(query);
@@ -674,7 +675,7 @@ namespace TicketImporter
                 {
                     try
                     {
-                        var workItemStore = (WorkItemStore) tfs.GetService(typeof (WorkItemStore));
+                        var workItemStore = (WorkItemStore)tfs.GetService(typeof(WorkItemStore));
                         var linkType = workItemStore.WorkItemLinkTypes[CoreLinkTypeReferenceNames.Hierarchy];
                         parentWorkItem.Links.Add(new WorkItemLink(linkType.ForwardEnd, workItem.Id));
                     }
@@ -688,7 +689,7 @@ namespace TicketImporter
 
             if (source.HasLinks)
             {
-                var workItemStore = (WorkItemStore) tfs.GetService(typeof (WorkItemStore));
+                var workItemStore = (WorkItemStore)tfs.GetService(typeof(WorkItemStore));
                 if (workItemStore.WorkItemLinkTypes.Contains("System.LinkTypes.Related"))
                 {
                     var linkType = workItemStore.WorkItemLinkTypes["System.LinkTypes.Related"];
@@ -720,7 +721,7 @@ namespace TicketImporter
 
             if (string.IsNullOrWhiteSpace(source.Epic) == false)
             {
-                var workItemStore = (WorkItemStore) tfs.GetService(typeof (WorkItemStore));
+                var workItemStore = (WorkItemStore)tfs.GetService(typeof(WorkItemStore));
                 var feature = findWorkItem(source.Epic);
                 if (feature != null)
                 {
@@ -773,18 +774,18 @@ namespace TicketImporter
 
                 // Batch save WorkItems to TFS
                 progressNotifer.UpdateProgress();
-                var workItemStore = (WorkItemStore) tfs.GetService(typeof (WorkItemStore));
+                var workItemStore = (WorkItemStore)tfs.GetService(typeof(WorkItemStore));
 
                 var batch = new WorkItem[newlyImported.Count];
                 newlyImported.Values.CopyTo(batch, 0);
 
                 // Unfortunately once created we need to revisit & update TFS ticket state.
                 // (Seemingly you cannot create a new TFS ticket with a status of "Closed", "In-progress" etc).
-                foreach (var item in newlyImported)
+                Parallel.ForEach(newlyImported, item =>
                 {
                     updateWorkItem(item.Key, item.Value);
                     progressNotifer.UpdateProgress();
-                }
+                });
                 progressNotifer.UpdateProgress();
 
                 batchFile = generateBatchFile();

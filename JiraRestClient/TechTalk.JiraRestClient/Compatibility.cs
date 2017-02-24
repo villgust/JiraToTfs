@@ -112,7 +112,7 @@ namespace TechTalk.JiraRestClient
         public event PercentComplete OnPercentComplete;
 
         public JiraClient(string baseUrl, string username, string password)
-         : this(baseUrl, username, password, false) { }
+         : this(baseUrl, username, password, true) { }
 
         public JiraClient(string baseUrl, string username, string password, bool isParallel)
         {
@@ -139,6 +139,11 @@ namespace TechTalk.JiraRestClient
         public IEnumerable<Issue> EnumerateIssues(String projectKey, String issueType)
         {
             return client.EnumerateIssues(projectKey, issueType).Select(Issue.From);
+        }
+
+        public IEnumerable<Issue> EnumerateIssues(String projectKey, IEnumerable<String> issueTypes)
+        {
+            return client.EnumerateIssues(projectKey, issueTypes).Select(Issue.From);
         }
 
         [Obsolete("This method is no longer supported and might be removed in a later release.")]

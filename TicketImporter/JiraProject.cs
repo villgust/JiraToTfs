@@ -36,9 +36,12 @@ namespace TicketImporter
 {
     public class JiraProject : ITicketSource
     {
+        //http://atlassian.techsolcom.ca/fr/actualites/entry/153-words-that-will-break-your-jira-jql-searches
+        private static string[] JQL_RESERVED = { "abort", "access", "add", "after", "alias", "all", "alter", "and", "any", "as", "asc", "audit", "avg", "before", "begin", "between", "boolean", "break", "by", "byte", "catch", "cf", "char", "character", "check", "checkpoint", "collate", "collation", "column", "commit", "connect", "continue", "count", "create", "current", "date", "decimal", "declare", "decrement", "default", "defaults", "define", "delete", "delimiter", "desc", "difference", "distinct", "divide", "do", "double", "drop", "else", "empty", "encoding", "end", "equals", "escape", "exclusive", "exec", "execute", "exists", "explain", "false", "fetch", "file", "field", "first", "float", "for", "from", "function", "go", "goto", "grant", "greater", "group", "having", "identified", "if", "immediate", "in", "increment", "index", "initial", "inner", "inout", "input", "insert", "int", "integer", "intersect", "intersection", "into", "is", "isempty", "isnull", "join", "last", "left", "less", "like", "limit", "lock", "long", "max", "min", "minus", "mode", "modify", "modulo", "more", "multiply", "next", "noaudit", "not", "notin", "nowait", "null", "number", "object", "of", "on", "option", "or", "order", "outer", "output", "power", "previous", "prior", "privileges", "public", "raise", "raw", "remainder", "rename", "resource", "return", "returns", "revoke", "right", "row", "rowid", "rownum", "rows", "select", "session", "set", "share", "size", "sqrt", "start", "strict", "string", "subtract", "sum", "synonym", "table", "then", "to", "trans", "transaction", "trigger", "true", "uid", "union", "unique", "update", "user", "validate", "values", "view", "when", "whenever", "where", "while", "with" };
+
         public JiraProject(string jiraServer, string jiraProject, string userName, string password)
         {
-            jira = new JiraClient(jiraServer, userName, password, true);
+            jira = new JiraClient(jiraServer, userName, password);
             jira.OnPercentComplete += onPercentComplete;
             this.userName = userName;
             this.password = password;
@@ -86,9 +89,10 @@ namespace TicketImporter
 
         public IEnumerable<Ticket> Tickets(IAvailableTicketTypes availableTypes)
         {
-            var map = new JiraTypeMap(this, availableTypes);
+            var map = new JiraTypeMap(this, availableTypes, false);
             ConcurrentBag<Ticket> tickets = new ConcurrentBag<Ticket>();
-            Parallel.ForEach (jira.EnumerateIssues(jiraProject), jiraKey =>
+            var issueTypes = GetListIssueTypes(map);
+            Parallel.ForEach (jira.EnumerateIssues(jiraProject, issueTypes), jiraKey =>
             {
                 Console.WriteLine("Thread {0} comming into get ticket", Thread.CurrentThread.ManagedThreadId);
 
@@ -185,6 +189,17 @@ namespace TicketImporter
                 tickets.Add(ticket);
             });
             return tickets;
+        }
+
+        private IEnumerable<String> GetListIssueTypes(JiraTypeMap map)
+        {
+            foreach (var item in map.Mappings)
+            {
+                string issueType = item.Key;
+                if (issueType.Any(Char.IsWhiteSpace) || JQL_RESERVED.Contains(issueType.ToLower()))
+                    issueType = String.Format("\"{0}\"", issueType);
+                yield return issueType;
+            }
         }
 
         public void DownloadAttachments(Ticket ticket, string downloadFolder)

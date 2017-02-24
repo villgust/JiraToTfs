@@ -76,29 +76,36 @@ namespace TicketImporter
         }
         #endregion
 
-        public JiraTypeMap(ITicketSource jiraProject, IAvailableTicketTypes availableTicektTypes)
+        public JiraTypeMap(ITicketSource jiraProject, IAvailableTicketTypes availableTicketTypes)
+         : this (jiraProject, availableTicketTypes, true) { }
+
+        public JiraTypeMap(ITicketSource jiraProject, IAvailableTicketTypes availableTicketTypes, bool needReload)
         {
             map = new Dictionary<string, string>();
-            jiraTicketTypes = jiraProject.GetAvailableTicketTypes();
-            availableTypes = availableTicektTypes;
+            availableTypes = availableTicketTypes;
+            map = SettingsStore.Load(key);
 
-            if (jiraTicketTypes.Count > 0)
+            if (needReload)
             {
-                map = SettingsStore.Load(key);
-                var updateStore = false;
-                foreach (
-                    var jiraType in
-                        jiraTicketTypes.Where(
-                            jiraType =>
-                                map.ContainsKey(jiraType) == false || availableTypes.Contains(map[jiraType]) == false))
+                jiraTicketTypes = jiraProject.GetAvailableTicketTypes();
+                if (jiraTicketTypes.Count > 0)
                 {
-                    map[jiraType] = defaultsTo(jiraType);
-                    updateStore = true;
-                }
 
-                if (updateStore)
-                {
-                    SettingsStore.Save(key, map);
+                    var updateStore = false;
+                    foreach (
+                        var jiraType in
+                            jiraTicketTypes.Where(
+                                jiraType =>
+                                    map.ContainsKey(jiraType) == false || availableTypes.Contains(map[jiraType]) == false))
+                    {
+                        map[jiraType] = defaultsTo(jiraType);
+                        updateStore = true;
+                    }
+
+                    if (updateStore)
+                    {
+                        SettingsStore.Save(key, map);
+                    }
                 }
             }
         }

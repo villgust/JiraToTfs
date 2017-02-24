@@ -5,7 +5,7 @@ using System.Text;
 
 namespace TechTalk.JiraRestClient
 {
-    static class JiraString
+    public static class JiraString
     {
         private const string toInclude = "\t\r\n";
 

@@ -25,6 +25,9 @@ namespace TechTalk.JiraRestClient
         /// <summary>Enumerates through all issues of the specified type for the given project</summary>
         IEnumerable<Issue<TIssueFields>> EnumerateIssues(String projectKey, String issueType);
 
+        /// <summary>Enumerates through all issues of the specified types for the given project</summary>
+        IEnumerable<Issue<TIssueFields>> EnumerateIssues(String projectKey, IEnumerable<String> issueTypes);
+
         /// <summary>Enumerates through all issues filtered by the specified jqlQuery starting form the specified startIndex</summary>
         IEnumerable<Issue<TIssueFields>> EnumerateIssuesByQuery(String jqlQuery, String[] fields, Int32 startIndex);
 
