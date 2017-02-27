@@ -117,8 +117,9 @@ namespace TicketImporter
                 ticketSource.PreferHtml = ticketTarget.SupportsHtml;
 
                 setCurrentAction(String.Format("Validating {0} tickets against {1}", ticketSource.Source, ticketTarget.Target));
-
-                Parallel.ForEach(ticketSource.Tickets(ticketTarget.GetAvailableTicketTypes()), sourceTicket =>
+                Parallel.ForEach(ticketSource.Tickets(ticketTarget.GetAvailableTicketTypes()), 
+                    new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, 
+                    sourceTicket =>
                 {
                     IFailedTicket failedTicket;
                     if (ticketTarget.CheckTicket(sourceTicket, out failedTicket))
@@ -135,7 +136,9 @@ namespace TicketImporter
                 {
                     setCurrentAction(String.Format("Creating {0} tickets", ticketTarget.Target));
                     var progressNotifer = new ProgressNotifier(onPercentComplete, passedTickets.Count);
-                    Parallel.ForEach(passedTickets, passedTicket =>
+                    Parallel.ForEach(passedTickets,
+                        new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
+                        passedTicket =>
                     {
                         if (includeAttachments)
                         {

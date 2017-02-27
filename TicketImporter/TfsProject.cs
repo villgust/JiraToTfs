@@ -781,7 +781,9 @@ namespace TicketImporter
 
                 // Unfortunately once created we need to revisit & update TFS ticket state.
                 // (Seemingly you cannot create a new TFS ticket with a status of "Closed", "In-progress" etc).
-                Parallel.ForEach(newlyImported, item =>
+                Parallel.ForEach(newlyImported,
+                    new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, 
+                    item =>
                 {
                     updateWorkItem(item.Key, item.Value);
                     progressNotifer.UpdateProgress();

@@ -92,7 +92,9 @@ namespace TicketImporter
             var map = new JiraTypeMap(this, availableTypes, false);
             ConcurrentBag<Ticket> tickets = new ConcurrentBag<Ticket>();
             var issueTypes = GetListIssueTypes(map);
-            Parallel.ForEach (jira.EnumerateIssues(jiraProject, issueTypes), jiraKey =>
+            Parallel.ForEach (jira.EnumerateIssues(jiraProject, issueTypes),
+                new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
+                jiraKey =>
             {
                 Console.WriteLine("Thread {0} comming into get ticket", Thread.CurrentThread.ManagedThreadId);
 
