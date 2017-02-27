@@ -112,16 +112,25 @@ namespace TicketImporter
                 ticket.ID = jiraTicket.key;
                 ticket.Summary = JiraString.StripNonPrintable(jiraTicket.fields.summary);
 
-                var status = jiraTicket.fields.status.statusCategory.key.ToUpper();
+                var status = jiraTicket.fields.status.name.ToUpper();
                 switch (status)
                 {
                     case "NEW":
+                    case "OPEN":
+                    case "REOPENED":
                         ticket.TicketState = Ticket.State.Todo;
                         break;
                     case "DONE":
+                    case "CLOSED":
                         ticket.TicketState = Ticket.State.Done;
                         break;
                     case "INDETERMINATE":
+                    case "IN PROGRESS":
+                    case "RESOLVED":
+                    case "IN REVIEW":
+                    case "IN QUEUE":
+                    case "TO BE REVIEWED":
+                    case "VERIFIED":
                         ticket.TicketState = Ticket.State.InProgress;
                         break;
                     default:
