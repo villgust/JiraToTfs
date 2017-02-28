@@ -29,22 +29,28 @@
         private void InitializeComponent()
         {
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle7 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AdvancedSettingsView));
             this.CancelBtn = new System.Windows.Forms.Button();
             this.SaveBtn = new System.Windows.Forms.Button();
             this.tabControl = new System.Windows.Forms.TabControl();
             this.typeTab = new System.Windows.Forms.TabPage();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.customQueryText = new System.Windows.Forms.TextBox();
+            this.cbCustomQuery = new System.Windows.Forms.CheckBox();
             this.pleaseCheckJira = new System.Windows.Forms.Label();
             this.noJiraTicketTypes = new System.Windows.Forms.Label();
             this.restoreDefaultTypesBtn = new System.Windows.Forms.Button();
             this.jiraGrid = new System.Windows.Forms.DataGridView();
+            this.isSelect = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.jiraColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.maptoColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.fieldTab = new System.Windows.Forms.TabPage();
             this.checkFieldSettings = new System.Windows.Forms.Label();
             this.noFieldsFound = new System.Windows.Forms.Label();
@@ -80,11 +86,9 @@
             this.label3 = new System.Windows.Forms.Label();
             this.customPriorityNote = new System.Windows.Forms.Label();
             this.TellMeMore = new System.Windows.Forms.LinkLabel();
-            this.isSelect = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            this.jiraColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.maptoColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.tabControl.SuspendLayout();
             this.typeTab.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.jiraGrid)).BeginInit();
             this.fieldTab.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.tfsFieldGrid)).BeginInit();
@@ -132,16 +136,49 @@
             // typeTab
             // 
             this.typeTab.BackColor = System.Drawing.SystemColors.ButtonFace;
+            this.typeTab.Controls.Add(this.groupBox1);
             this.typeTab.Controls.Add(this.pleaseCheckJira);
             this.typeTab.Controls.Add(this.noJiraTicketTypes);
             this.typeTab.Controls.Add(this.restoreDefaultTypesBtn);
             this.typeTab.Controls.Add(this.jiraGrid);
             this.typeTab.Location = new System.Drawing.Point(4, 22);
             this.typeTab.Name = "typeTab";
-            this.typeTab.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.typeTab.Padding = new System.Windows.Forms.Padding(3);
             this.typeTab.Size = new System.Drawing.Size(521, 567);
             this.typeTab.TabIndex = 0;
             this.typeTab.Text = "Work Item Type";
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.customQueryText);
+            this.groupBox1.Controls.Add(this.cbCustomQuery);
+            this.groupBox1.Location = new System.Drawing.Point(6, 487);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(509, 74);
+            this.groupBox1.TabIndex = 22;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Custom Query";
+            // 
+            // customQueryText
+            // 
+            this.customQueryText.Enabled = false;
+            this.customQueryText.Location = new System.Drawing.Point(7, 44);
+            this.customQueryText.Name = "customQueryText";
+            this.customQueryText.ReadOnly = true;
+            this.customQueryText.Size = new System.Drawing.Size(496, 20);
+            this.customQueryText.TabIndex = 1;
+            // 
+            // cbCustomQuery
+            // 
+            this.cbCustomQuery.AutoSize = true;
+            this.cbCustomQuery.Location = new System.Drawing.Point(7, 20);
+            this.cbCustomQuery.Name = "cbCustomQuery";
+            this.cbCustomQuery.Size = new System.Drawing.Size(111, 17);
+            this.cbCustomQuery.TabIndex = 0;
+            this.cbCustomQuery.Text = "Use custom query";
+            this.cbCustomQuery.TextImageRelation = System.Windows.Forms.TextImageRelation.TextBeforeImage;
+            this.cbCustomQuery.UseVisualStyleBackColor = true;
+            this.cbCustomQuery.CheckedChanged += new System.EventHandler(this.cbCustomQuery_CheckedChanged);
             // 
             // pleaseCheckJira
             // 
@@ -168,7 +205,7 @@
             // 
             // restoreDefaultTypesBtn
             // 
-            this.restoreDefaultTypesBtn.Location = new System.Drawing.Point(3, 535);
+            this.restoreDefaultTypesBtn.Location = new System.Drawing.Point(6, 458);
             this.restoreDefaultTypesBtn.Name = "restoreDefaultTypesBtn";
             this.restoreDefaultTypesBtn.Size = new System.Drawing.Size(97, 23);
             this.restoreDefaultTypesBtn.TabIndex = 19;
@@ -204,8 +241,34 @@
             this.jiraGrid.ShowCellErrors = false;
             this.jiraGrid.ShowEditingIcon = false;
             this.jiraGrid.ShowRowErrors = false;
-            this.jiraGrid.Size = new System.Drawing.Size(518, 508);
+            this.jiraGrid.Size = new System.Drawing.Size(518, 435);
             this.jiraGrid.TabIndex = 18;
+            // 
+            // isSelect
+            // 
+            this.isSelect.HeaderText = "";
+            this.isSelect.Name = "isSelect";
+            this.isSelect.Width = 20;
+            // 
+            // jiraColumn
+            // 
+            this.jiraColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Info;
+            dataGridViewCellStyle2.ForeColor = System.Drawing.Color.Black;
+            this.jiraColumn.DefaultCellStyle = dataGridViewCellStyle2;
+            this.jiraColumn.FillWeight = 50F;
+            this.jiraColumn.HeaderText = "Jira Ticket Type";
+            this.jiraColumn.Name = "jiraColumn";
+            this.jiraColumn.ReadOnly = true;
+            this.jiraColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            // 
+            // maptoColumn
+            // 
+            this.maptoColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.maptoColumn.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
+            this.maptoColumn.HeaderText = "Maps to";
+            this.maptoColumn.Name = "maptoColumn";
+            this.maptoColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
             // fieldTab
             // 
@@ -215,7 +278,7 @@
             this.fieldTab.Controls.Add(this.tfsFieldGrid);
             this.fieldTab.Location = new System.Drawing.Point(4, 22);
             this.fieldTab.Name = "fieldTab";
-            this.fieldTab.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.fieldTab.Padding = new System.Windows.Forms.Padding(3);
             this.fieldTab.Size = new System.Drawing.Size(521, 567);
             this.fieldTab.TabIndex = 1;
             this.fieldTab.Text = "Default Field Values";
@@ -306,7 +369,7 @@
             this.tfsUserTab.Controls.Add(this.noUsersFound);
             this.tfsUserTab.Location = new System.Drawing.Point(4, 22);
             this.tfsUserTab.Name = "tfsUserTab";
-            this.tfsUserTab.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.tfsUserTab.Padding = new System.Windows.Forms.Padding(3);
             this.tfsUserTab.Size = new System.Drawing.Size(521, 567);
             this.tfsUserTab.TabIndex = 2;
             this.tfsUserTab.Text = "Default User";
@@ -400,7 +463,7 @@
             this.workItemTab.Controls.Add(this.workItemGrid);
             this.workItemTab.Location = new System.Drawing.Point(4, 22);
             this.workItemTab.Name = "workItemTab";
-            this.workItemTab.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.workItemTab.Padding = new System.Windows.Forms.Padding(3);
             this.workItemTab.Size = new System.Drawing.Size(521, 567);
             this.workItemTab.TabIndex = 3;
             this.workItemTab.Text = "New Work Items";
@@ -501,7 +564,7 @@
             this.tfsBugTab.Controls.Add(this.priorityPanel);
             this.tfsBugTab.Location = new System.Drawing.Point(4, 22);
             this.tfsBugTab.Name = "tfsBugTab";
-            this.tfsBugTab.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.tfsBugTab.Padding = new System.Windows.Forms.Padding(3);
             this.tfsBugTab.Size = new System.Drawing.Size(521, 567);
             this.tfsBugTab.TabIndex = 4;
             this.tfsBugTab.Text = "Bug Priorities";
@@ -643,32 +706,6 @@
             this.TellMeMore.Text = "Tell me more ...";
             this.TellMeMore.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.TellMeMore_LinkClicked);
             // 
-            // isSelect
-            // 
-            this.isSelect.HeaderText = "";
-            this.isSelect.Name = "isSelect";
-            this.isSelect.Width = 20;
-            // 
-            // jiraColumn
-            // 
-            this.jiraColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Info;
-            dataGridViewCellStyle2.ForeColor = System.Drawing.Color.Black;
-            this.jiraColumn.DefaultCellStyle = dataGridViewCellStyle2;
-            this.jiraColumn.FillWeight = 50F;
-            this.jiraColumn.HeaderText = "Jira Ticket Type";
-            this.jiraColumn.Name = "jiraColumn";
-            this.jiraColumn.ReadOnly = true;
-            this.jiraColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            // 
-            // maptoColumn
-            // 
-            this.maptoColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.maptoColumn.DisplayStyle = System.Windows.Forms.DataGridViewComboBoxDisplayStyle.ComboBox;
-            this.maptoColumn.HeaderText = "Maps to";
-            this.maptoColumn.Name = "maptoColumn";
-            this.maptoColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
             // AdvancedSettingsView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -691,6 +728,8 @@
             this.Shown += new System.EventHandler(this.OnFirstShow);
             this.tabControl.ResumeLayout(false);
             this.typeTab.ResumeLayout(false);
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.jiraGrid)).EndInit();
             this.fieldTab.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.tfsFieldGrid)).EndInit();
@@ -756,5 +795,8 @@
         private System.Windows.Forms.DataGridViewCheckBoxColumn isSelect;
         private System.Windows.Forms.DataGridViewTextBoxColumn jiraColumn;
         private System.Windows.Forms.DataGridViewComboBoxColumn maptoColumn;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.CheckBox cbCustomQuery;
+        private System.Windows.Forms.TextBox customQueryText;
     }
 }

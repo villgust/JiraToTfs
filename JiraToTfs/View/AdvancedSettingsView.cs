@@ -315,5 +315,16 @@ namespace JiraToTfs.View
         {
             Process.Start("https://github.com/KilskyreMan/JiraToTfs/wiki#advanced-settings");
         }
+
+        private void cbCustomQuery_CheckedChanged(object sender, EventArgs e)
+        {
+            customQueryText.Enabled = cbCustomQuery.Checked;
+            customQueryText.ReadOnly = !cbCustomQuery.Checked;
+        }
+
+        public string getCustomQuery()
+        {
+            return cbCustomQuery.Checked ? customQueryText.Text : null;
+        }
     }
 }

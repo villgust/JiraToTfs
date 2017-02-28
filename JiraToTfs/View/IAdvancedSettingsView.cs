@@ -51,5 +51,6 @@ namespace JiraToTfs.View
         string GetCurrentPriorityField();
         IEnumerable<KeyValuePair<string, string>> GetCurrentPriorities();
         void TfsNotAvailable();
+        string getCustomQuery();
     }
 }

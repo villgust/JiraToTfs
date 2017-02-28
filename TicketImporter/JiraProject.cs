@@ -92,114 +92,136 @@ namespace TicketImporter
             var map = new JiraTypeMap(this, availableTypes, false);
             ConcurrentBag<Ticket> tickets = new ConcurrentBag<Ticket>();
             var issueTypes = GetListIssueTypes(map);
-            Parallel.ForEach (jira.EnumerateIssues(jiraProject, issueTypes),
-                new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
-                jiraKey =>
+
+            if (string.IsNullOrEmpty(CustomQuery))
             {
-                Console.WriteLine("Thread {0} comming into get ticket", Thread.CurrentThread.ManagedThreadId);
-
-                var issueRef = new IssueRef
-                {
-                    id = jiraKey.id,
-                    key = jiraKey.key
-                };
-                var jiraTicket = jira.LoadIssue(issueRef);
-
-                onDetailedProcessing(jiraTicket.key + " - " + jiraTicket.fields.summary);
-
-                var ticket = new Ticket();
-                ticket.TicketType = map[jiraTicket.fields.issuetype.name];
-                ticket.ID = jiraTicket.key;
-                ticket.Summary = JiraString.StripNonPrintable(jiraTicket.fields.summary);
-
-                var status = jiraTicket.fields.status.name.ToUpper();
-                switch (status)
-                {
-                    case "NEW":
-                    case "OPEN":
-                    case "REOPENED":
-                        ticket.TicketState = Ticket.State.Todo;
-                        break;
-                    case "DONE":
-                    case "CLOSED":
-                        ticket.TicketState = Ticket.State.Done;
-                        break;
-                    case "INDETERMINATE":
-                    case "IN PROGRESS":
-                    case "RESOLVED":
-                    case "IN REVIEW":
-                    case "IN QUEUE":
-                    case "TO BE REVIEWED":
-                    case "VERIFIED":
-                        ticket.TicketState = Ticket.State.InProgress;
-                        break;
-                    default:
-                        ticket.TicketState = Ticket.State.Unknown;
-                        break;
-                }
-
-                ticket.Parent = jiraTicket.fields.parent.key;
-
-                ticket.Description = JiraString.StripNonPrintable(jiraTicket.fields.description);
-                if (PreferHtml &&
-                    string.IsNullOrWhiteSpace(jiraTicket.renderedFields.description) == false)
-                {
-                    ticket.Description = JiraString.StripNonPrintable(jiraTicket.renderedFields.description);
-                }
-                ticket.CreatedOn = jiraTicket.fields.created;
-                ticket.LastModified = jiraTicket.fields.updated;
-
-                ticket.CreatedBy = new User(jiraTicket.fields.reporter.displayName,
-                    jiraTicket.fields.reporter.name,
-                    jiraTicket.fields.reporter.emailAddress);
-                ticket.AssignedTo = new User(jiraTicket.fields.assignee.displayName,
-                    jiraTicket.fields.assignee.name,
-                    jiraTicket.fields.assignee.emailAddress);
-
-                ticket.Epic = jiraTicket.fields.customfield_10800;
-                ticket.ExternalReference = jiraTicket.key;
-                ticket.Url = jiraServer + "/browse/" + jiraTicket.key;
-                int.TryParse(jiraTicket.fields.customfield_10004, out ticket.StoryPoints);
-
-                foreach (var link in jiraTicket.fields.issuelinks)
-                {
-                    if (string.Compare(link.inwardIssue.key, jiraTicket.key) != 0)
+                Parallel.ForEach(jira.EnumerateIssues(jiraProject, issueTypes),
+                    new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
+                    jiraKey =>
                     {
-                        ticket.Links.Add(new Link(link.inwardIssue.key, link.type.name));
-                    }
-                    if (string.Compare(link.outwardIssue.key, jiraTicket.key) != 0)
+                        Console.WriteLine("Thread {0} comming into get ticket", Thread.CurrentThread.ManagedThreadId);
+
+                        GetTicket(jiraKey, map, tickets);
+                    });
+            } else
+            {
+                Parallel.ForEach(jira.EnumerateIssuesByQuery(CustomQuery, null, 0),
+                    new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
+                    jiraKey =>
                     {
-                        ticket.Links.Add(new Link(link.outwardIssue.key, link.type.name));
-                    }
-                }
+                        Console.WriteLine("Thread {0} comming into get ticket", Thread.CurrentThread.ManagedThreadId);
 
-                foreach (var jiraComment in jiraTicket.fields.comments)
-                {
-                    var author = new User(jiraComment.author.displayName,
-                        jiraComment.author.name, jiraComment.author.emailAddress);
-                    var comment = new Comment(author, jiraComment.body, jiraComment.created);
-                    if (jiraComment.updated.Date > jiraComment.created.Date)
-                    {
-                        comment.Updated = jiraComment.updated;
-                    }
-                    ticket.Comments.Add(comment);
-                }
-
-                foreach (var attachment in jiraTicket.fields.attachment)
-                {
-                    ticket.Attachments.Add(new Attachment(attachment.filename, attachment.content));
-                }
-
-                ticket.Priority = jiraTicket.fields.priority.name;
-                ticket.Project = jiraTicket.fields.project.name;
-                if (jiraTicket.fields.resolutiondate != null)
-                {
-                    ticket.ClosedOn = jiraTicket.fields.resolutiondate;
-                }
-
-                tickets.Add(ticket);
-            });
+                        GetTicket(jiraKey, map, tickets);
+                    });
+            }
             return tickets;
+        }
+
+        private void GetTicket(Issue jiraKey, JiraTypeMap map, ConcurrentBag<Ticket> tickets)
+        {
+            var issueRef = new IssueRef
+            {
+                id = jiraKey.id,
+                key = jiraKey.key
+            };
+            var jiraTicket = jira.LoadIssue(issueRef);
+
+            onDetailedProcessing(jiraTicket.key + " - " + jiraTicket.fields.summary);
+
+            var ticket = new Ticket();
+            ticket.TicketType = map[jiraTicket.fields.issuetype.name];
+            //We didn't map this type
+            if (ticket.TicketType == null)
+                return;
+            ticket.ID = jiraTicket.key;
+            ticket.Summary = JiraString.StripNonPrintable(jiraTicket.fields.summary);
+
+            var status = jiraTicket.fields.status.name.ToUpper();
+            switch (status)
+            {
+                case "NEW":
+                case "OPEN":
+                case "REOPENED":
+                    ticket.TicketState = Ticket.State.Todo;
+                    break;
+                case "DONE":
+                case "CLOSED":
+                    ticket.TicketState = Ticket.State.Done;
+                    break;
+                case "INDETERMINATE":
+                case "IN PROGRESS":
+                case "RESOLVED":
+                case "IN REVIEW":
+                case "IN QUEUE":
+                case "TO BE REVIEWED":
+                case "VERIFIED":
+                    ticket.TicketState = Ticket.State.InProgress;
+                    break;
+                default:
+                    ticket.TicketState = Ticket.State.Unknown;
+                    break;
+            }
+
+            ticket.Parent = jiraTicket.fields.parent.key;
+
+            ticket.Description = JiraString.StripNonPrintable(jiraTicket.fields.description);
+            if (PreferHtml &&
+                string.IsNullOrWhiteSpace(jiraTicket.renderedFields.description) == false)
+            {
+                ticket.Description = JiraString.StripNonPrintable(jiraTicket.renderedFields.description);
+            }
+            ticket.CreatedOn = jiraTicket.fields.created;
+            ticket.LastModified = jiraTicket.fields.updated;
+
+            ticket.CreatedBy = new User(jiraTicket.fields.reporter.displayName,
+                jiraTicket.fields.reporter.name,
+                jiraTicket.fields.reporter.emailAddress);
+            ticket.AssignedTo = new User(jiraTicket.fields.assignee.displayName,
+                jiraTicket.fields.assignee.name,
+                jiraTicket.fields.assignee.emailAddress);
+
+            ticket.Epic = jiraTicket.fields.customfield_10800;
+            ticket.ExternalReference = jiraTicket.key;
+            ticket.Url = jiraServer + "/browse/" + jiraTicket.key;
+            int.TryParse(jiraTicket.fields.customfield_10004, out ticket.StoryPoints);
+
+            foreach (var link in jiraTicket.fields.issuelinks)
+            {
+                if (string.Compare(link.inwardIssue.key, jiraTicket.key) != 0)
+                {
+                    ticket.Links.Add(new Link(link.inwardIssue.key, link.type.name));
+                }
+                if (string.Compare(link.outwardIssue.key, jiraTicket.key) != 0)
+                {
+                    ticket.Links.Add(new Link(link.outwardIssue.key, link.type.name));
+                }
+            }
+
+            foreach (var jiraComment in jiraTicket.fields.comments)
+            {
+                var author = new User(jiraComment.author.displayName,
+                    jiraComment.author.name, jiraComment.author.emailAddress);
+                var comment = new Comment(author, jiraComment.body, jiraComment.created);
+                if (jiraComment.updated.Date > jiraComment.created.Date)
+                {
+                    comment.Updated = jiraComment.updated;
+                }
+                ticket.Comments.Add(comment);
+            }
+
+            foreach (var attachment in jiraTicket.fields.attachment)
+            {
+                ticket.Attachments.Add(new Attachment(attachment.filename, attachment.content));
+            }
+
+            ticket.Priority = jiraTicket.fields.priority.name;
+            ticket.Project = jiraTicket.fields.project.name;
+            if (jiraTicket.fields.resolutiondate != null)
+            {
+                ticket.ClosedOn = jiraTicket.fields.resolutiondate;
+            }
+
+            tickets.Add(ticket);
         }
 
         private IEnumerable<String> GetListIssueTypes(JiraTypeMap map)
@@ -291,6 +313,7 @@ namespace TicketImporter
 
         public bool PreferHtml { get; set; }
 
+        public string CustomQuery { get; set; }
         #endregion
     }
 }

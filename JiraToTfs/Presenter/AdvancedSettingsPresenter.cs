@@ -88,6 +88,7 @@ namespace JiraToTfs.Presenter
             advancedSettings.TfsProject.Users.Save();
             advancedSettings.TfsStateMap.Save(view.GetCurrentStates());
             advancedSettings.TfsPriorityMap.Save(view.GetCurrentPriorityField(), view.GetCurrentPriorities());
+            advancedSettings.JiraProject.CustomQuery = view.getCustomQuery();
         }
 
         public void OnRestoreTicketTypeDefaults()

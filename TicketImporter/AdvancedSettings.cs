@@ -34,9 +34,9 @@ namespace TicketImporter
 
         public AdvancedSettings(JiraProject jiraProject, TfsProject tfsProject, ShowFirst showFirst)
         {
-            var jira = jiraProject;
+            this.jiraProject = jiraProject;
             this.tfsProject = tfsProject;
-            jiraTypeMap = new JiraTypeMap(jira, this.tfsProject);
+            jiraTypeMap = new JiraTypeMap(jiraProject, this.tfsProject);
             tfsFieldMap = new TfsFieldMap(this.tfsProject.Fields);
             tfsStateMap = new TfsStateMap(this.tfsProject);
             tfsPriorityMap = new TfsPriorityMap();
@@ -83,8 +83,14 @@ namespace TicketImporter
             get { return tfsProject; }
         }
 
+        public JiraProject JiraProject
+        {
+            get { return jiraProject; }
+        }
+
         #region private class members
 
+        private readonly JiraProject jiraProject;
         private readonly TfsProject tfsProject;
         private readonly JiraTypeMap jiraTypeMap;
         private readonly TfsFieldMap tfsFieldMap;

@@ -146,6 +146,11 @@ namespace TechTalk.JiraRestClient
             return client.EnumerateIssues(projectKey, issueTypes).Select(Issue.From);
         }
 
+        public IEnumerable<Issue> EnumerateIssuesByQuery(String jqlQuery, string[] fields, int startIndex)
+        {
+            return client.EnumerateIssuesByQuery(jqlQuery, fields, startIndex).Select(Issue.From);
+        }
+
         [Obsolete("This method is no longer supported and might be removed in a later release.")]
         public IEnumerable<Issue> GetIssuesByQuery(string projectKey, string issueType, string jqlQuery)
         {

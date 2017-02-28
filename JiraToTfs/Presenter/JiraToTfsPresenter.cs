@@ -85,8 +85,17 @@ namespace JiraToTfs.Presenter
         {
             try
             {
-                var jiraProject = new JiraProject(view.JiraServer, view.JiraProject,
+                if (jiraProject != null)
+                {
+                    var customQuery = jiraProject.CustomQuery;
+                    jiraProject = new JiraProject(view.JiraServer, view.JiraProject,
                     view.JiraUserName, view.JiraPassword);
+                    jiraProject.CustomQuery = customQuery;
+                } else
+                {
+                    jiraProject = new JiraProject(view.JiraServer, view.JiraProject,
+                    view.JiraUserName, view.JiraPassword);
+                }
                 var advancedSettings = new AdvancedSettings(jiraProject, selectedProject, showFirst);
                 view.ShowAdvancedSettings(advancedSettings);
             }
@@ -130,6 +139,7 @@ namespace JiraToTfs.Presenter
 
         private readonly IJiraToTfsView view;
         private TfsProject selectedProject;
+        private JiraProject jiraProject;
         private readonly BackgroundWorker importWorker;
         private readonly BackgroundWorker tfsConnectWorker;
 
@@ -285,8 +295,17 @@ namespace JiraToTfs.Presenter
             {
                 selectedProject.AssignTicketsToTeam(view.SelectedTfsTeam);
                 selectedProject.AssignTicketsToAreaPath(view.SelectedAreaPath);
-                var jiraProject = new JiraProject(view.JiraServer, view.JiraProject,
+                if (jiraProject != null)
+                {
+                    var customQuery = jiraProject.CustomQuery;
+                    jiraProject = new JiraProject(view.JiraServer, view.JiraProject,
                     view.JiraUserName, view.JiraPassword);
+                    jiraProject.CustomQuery = customQuery;
+                } else
+                {
+                    jiraProject = new JiraProject(view.JiraServer, view.JiraProject,
+                    view.JiraUserName, view.JiraPassword);
+                }
                 importAgent = new TicketImportAgent(jiraProject, selectedProject, view.IncludeAttachments);
                 importAgent.ReportProgress += (action, percentComplete) =>
                 {

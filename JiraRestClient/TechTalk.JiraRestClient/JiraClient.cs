@@ -169,6 +169,7 @@ namespace TechTalk.JiraRestClient
             {
                 var path = String.Format("search?jql={0}&startAt={1}&maxResults={2}", jqlQuery, resultCount, queryCount);
                 if (fields != null) path += String.Format("&fields={0}", String.Join(",", fields));
+                path += "&expand=renderedFields";
 
                 var request = CreateRequest(Method.GET, path);
 
