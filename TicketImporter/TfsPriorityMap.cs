@@ -55,7 +55,15 @@ namespace TicketImporter
                 var priority = "";
                 if (string.IsNullOrWhiteSpace(lookUp) == false)
                 {
-                    priority = map[lookUp];
+                    // HRO Customized lookup to fallback. This must of course be improved
+                    if (map.Keys.Contains(lookUp))
+                    {
+                        priority = map[lookUp];
+                    } else
+                    {
+                        // Map to some default
+                        priority = "2";
+                    }
                 }
                 return priority;
             }
@@ -76,10 +84,12 @@ namespace TicketImporter
                 /*Microsoft.VSTS.Common.Priority*/
                 {"Blocker", "1"},
                 {"Critical", "1"},
+                {"High", "2"},
                 {"Major", "2"},
                 {"Medium", "3" },
                 {"Minor", "4"},
-                {"Trivial", "4"}
+                {"Trivial", "4"},
+                {"Lowest", "4"}
             };
             SettingsStore.Save(key, map);
         }
